@@ -9,7 +9,7 @@ const {
 } = require("../../../utils/donation");
 const { createRecurringPaymentLink } = require("../../../utils/banks");
 const { createPaymentURL } = require("../../../utils/montonio");
-const { formatEstonianAmount } = require("../../../utils/estonia");
+const { formatAmount: formatAmount } = require("../../../utils/local");
 const {
   format,
   textIntoParagraphs,
@@ -293,7 +293,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       firstNameHtml: sanitize(donation.donor.firstName),
       lastName: donation.donor.lastName,
       lastNameHtml: sanitize(donation.donor.lastName),
-      amount: formatEstonianAmount(donation.amount / 100),
+      amount: formatAmount(donation.amount / 100),
       currency: global.currency,
     };
 
@@ -306,7 +306,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       .concat(donation.tipAmount > 0 ? [tip] : [])
       .map((organizationDonation) => {
         const organization = organizationDonation.organization;
-        const amount = formatEstonianAmount(organizationDonation.amount / 100);
+        const amount = formatAmount(organizationDonation.amount / 100);
         return `${organization.title}: ${amount}${global.currency}`;
       })
       .join("\n");
@@ -352,7 +352,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       firstNameHtml: sanitize(recurringDonation.donor.firstName),
       lastName: recurringDonation.donor.lastName,
       lastNameHtml: sanitize(recurringDonation.donor.lastName),
-      amount: formatEstonianAmount(recurringDonation.amount / 100),
+      amount: formatAmount(recurringDonation.amount / 100),
       currency: global.currency,
     };
 
@@ -365,7 +365,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       .concat(recurringDonation.tipAmount > 0 ? [tip] : [])
       .map((organizationRecurringDonation) => {
         const organization = organizationRecurringDonation.organization;
-        const amount = formatEstonianAmount(
+        const amount = formatAmount(
           organizationRecurringDonation.amount / 100
         );
         return `${organization.title}: ${amount}${global.currency}`;
@@ -426,7 +426,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     const data = {
       dedicationName: donation.dedicationName,
       donorName: `${donation.donor.firstName} ${donation.donor.lastName}`,
-      amount: formatEstonianAmount(donation.amount / 100),
+      amount: formatAmount(donation.amount / 100),
       currency: global.currency,
       dedicationMessage: `"${donation.dedicationMessage}"`,
     };
@@ -446,7 +446,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       .concat(donation.tipAmount > 0 ? [tip] : [])
       .map((organizationDonation) => {
         const organization = organizationDonation.organization;
-        const amount = formatEstonianAmount(organizationDonation.amount / 100);
+        const amount = formatAmount(organizationDonation.amount / 100);
         return `${organization.title}: ${amount}${global.currency}`;
       })
       .join("\n");

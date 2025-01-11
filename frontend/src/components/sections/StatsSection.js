@@ -1,6 +1,6 @@
 "use client";
 
-import { formatEstonianAmount } from "@/utils/estonia";
+import { formatAmount } from "@/utils/local";
 import { fetcher } from "@/utils/react";
 import useSWR from "swr";
 import LoadingSection from "./LoadingSection";
@@ -49,7 +49,7 @@ export default function StatsSection({
           <Stat term={operatingSinceText} value={operatingSinceValue} />
           <Stat
             term={donationAmountText}
-            value={formatEstonianAmount(donationAmount)}
+            value={formatAmount(donationAmount)}
             unit={donationAmountCurrency}
           />
           <Stat term={transactionFeeText} value={transactionFeeValue} />

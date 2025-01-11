@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { getStrapiURL } from "@/utils/strapi";
 import { format } from "@/utils/string";
-import { formatEstonianAmount } from "@/utils/estonia";
+import { formatAmount } from "@/utils/local";
 import { useRouter } from "next/navigation";
 import LoadingSection from "./LoadingSection";
 import DonationSummary from "../elements/DonationSummary";
@@ -44,7 +44,7 @@ export default function ThankYouSection({
 
   const donation = {
     ...data.donation.donor,
-    amount: formatEstonianAmount(data.donation.amount / 100),
+    amount: formatAmount(data.donation.amount / 100),
   };
 
   // Remove payment_token from URL

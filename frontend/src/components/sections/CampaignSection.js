@@ -2,7 +2,7 @@
 
 import { format } from "@/utils/string";
 import Markdown from "../elements/Markdown";
-import { formatEstonianAmount } from "@/utils/estonia";
+import { formatAmount } from "@/utils/local";
 import useSWR from "swr";
 import { fetcher } from "@/utils/react";
 import { getStrapiURL } from "@/utils/strapi";
@@ -76,9 +76,9 @@ export default function CampaignSection({
   const amountProgress = (progress / 100) * goal;
 
   const numbers = {
-    amount: formatEstonianAmount(Math.floor(amountProgress)),
-    goal: formatEstonianAmount(goal),
-    remainingUntilGoal: formatEstonianAmount(Math.ceil(goal - amountProgress)),
+    amount: formatAmount(Math.floor(amountProgress)),
+    goal: formatAmount(goal),
+    remainingUntilGoal: formatAmount(Math.ceil(goal - amountProgress)),
   };
 
   return (

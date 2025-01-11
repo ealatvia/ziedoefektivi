@@ -9,7 +9,7 @@ import Steps from "../elements/forms/Steps";
 import NameInput from "../elements/forms/NameInput";
 import EmailInput from "../elements/forms/EmailInput";
 import IdCodeInput from "../elements/forms/IdCodeInput";
-import { formatEstonianAmount } from "@/utils/estonia";
+import { formatAmount } from "@/utils/local";
 import CheckboxInput from "../elements/forms/CheckboxInput";
 import { makeDonationRequest } from "@/utils/donation";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -372,7 +372,7 @@ export default function DonationSection(props) {
         <div className="flex max-w-lg flex-col gap-4 bg-white px-4 py-24 xs:rounded-2xl xs:px-12 xs:py-12 ">
           <Markdown className="prose prose-primary w-full">
             {format(props.recurringDonationGuide, {
-              amount: formatEstonianAmount(totalAmount) + props.global.currency,
+              amount: formatAmount(totalAmount) + props.global.currency,
             })}
           </Markdown>
         </div>

@@ -14,7 +14,7 @@ export default async function RootLayout({ children }) {
   const goatCounterCode = process.env.GOATCOUNTER_CODE;
 
   return (
-    <html lang="et" className="h-full">
+    <html lang="lv" className="h-full">
       {goatCounterCode && (
         <head>
           <GCScript siteUrl={`https://${goatCounterCode}.goatcounter.com/count`} />
