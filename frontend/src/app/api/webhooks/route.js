@@ -6,6 +6,9 @@ import { makeDonationRequest } from '@/utils/donation';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+// Configure the runtime
+export const runtime = 'nodejs';
+
 export async function POST(request) {
     const body = await request.text();
     const headersList = headers();
@@ -22,7 +25,6 @@ export async function POST(request) {
             { status: 400 }
         );
     }
-
     // Handle the event
     switch (event.type) {
         case 'checkout.session.completed': {
@@ -96,9 +98,3 @@ export async function POST(request) {
 
     return NextResponse.json({ received: true });
 }
-
-export const config = {
-    api: {
-        bodyParser: false,
-    },
-};
