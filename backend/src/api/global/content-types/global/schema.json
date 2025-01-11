@@ -89,7 +89,7 @@
     },
     "dateLocale": {
       "type": "enumeration",
-      "enum": ["et-EE"]
+      "enum": ["lv-LV"]
     },
     "blogSlug": {
       "type": "string"

@@ -14,10 +14,10 @@
   "attributes": {
     "idCode": {
       "type": "string",
-      "maxLength": 11,
-      "minLength": 11,
+      "maxLength": 12,
+      "minLength": 12,
       "required": true,
-      "regex": "[1-6]\\d{2}[0-1]\\d[0-3]\\d{5}"
+      "regex": "^[0-3]\\d{5}-\\d{5}$"
     },
     "firstName": {
       "type": "string",

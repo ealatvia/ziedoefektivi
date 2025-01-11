@@ -1067,8 +1067,8 @@ export interface ApiDonorDonor extends Schema.CollectionType {
     idCode: Attribute.String &
       Attribute.Required &
       Attribute.SetMinMaxLength<{
-        minLength: 11;
-        maxLength: 11;
+        minLength: 12;
+        maxLength: 12;
       }>;
     firstName: Attribute.String &
       Attribute.SetMinMaxLength<{
@@ -1184,7 +1184,7 @@ export interface ApiGlobalGlobal extends Schema.SingleType {
     totalText: Attribute.String;
     currency: Attribute.String & Attribute.DefaultTo<'\u20AC'>;
     tipOrganization: Attribute.String;
-    dateLocale: Attribute.Enumeration<['et-EE']>;
+    dateLocale: Attribute.Enumeration<['lv-LV']>;
     blogSlug: Attribute.String;
     donateText: Attribute.String;
     readMoreText: Attribute.String;

@@ -1,4 +1,4 @@
-import { validateIdCode } from "@/utils/estonia";
+import { validateIdCode } from "@/utils/local";
 import TextInput from "./TextInput";
 
 export default function IdCodeInput({
@@ -17,7 +17,7 @@ export default function IdCodeInput({
       isValid={(value) => validateIdCode(value)}
       label={idCodeText}
       autoComplete="isikukood"
-      maxLength={11}
+      maxLength={12}
       description={idCodeDescription}
     />
   );

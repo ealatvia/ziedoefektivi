@@ -1,4 +1,4 @@
-import { formatEstonianAmountWithCents } from "@/utils/estonia";
+import { formatAmountWithCents } from "@/utils/local";
 import Anchor from "./Anchor";
 
 export default function Summary({ summary, currency, totalText, totalAmount }) {
@@ -24,7 +24,7 @@ export default function Summary({ summary, currency, totalText, totalAmount }) {
             )}
           </dt>
           <dd className="whitespace-nowrap font-medium text-slate-900">
-            {formatEstonianAmountWithCents(row.amount)}
+            {formatAmountWithCents(row.amount)}
             {currency}
           </dd>
         </div>
@@ -32,7 +32,7 @@ export default function Summary({ summary, currency, totalText, totalAmount }) {
       <div className="flex items-center justify-between gap-3 py-2">
         <dt className="font-medium text-slate-900">{totalText}</dt>
         <dd className="whitespace-nowrap font-medium text-primary-700">
-          {formatEstonianAmountWithCents(totalAmount)}
+          {formatAmountWithCents(totalAmount)}
           {currency}
         </dd>
       </div>

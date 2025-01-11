@@ -1,18 +1,18 @@
 /**
- * Format a number to a valid Estonian number string.
+ * Format a number to a valid Latvian number string.
  * @param {number} number - The number to format.
  * @return {string} - A formatted number string.
  * @example
- * formatEstonianAmount(1234.56); // "1 234,56"
- * formatEstonianAmount(1234); // "1 234"
- * formatEstonianAmount(1234.5); // "1 234,5"
+ * formatAmount(1234.56); // "1 234,56"
+ * formatAmount(1234); // "1 234"
+ * formatAmount(1234.5); // "1 234,5"
  */
-function formatEstonianAmount(number) {
-  const withCents = formatEstonianAmountWithCents(number);
+function formatAmount(number) {
+  const withCents = formatAmountWithCents(number);
   return withCents.replace(/,00$/, "");
 }
 
-function formatEstonianAmountWithCents(number) {
+function formatAmountWithCents(number) {
   const asString = String(number);
   const [integerPart, decimalPart] = asString.split(".");
   const integerWithSpaces = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
@@ -23,6 +23,6 @@ function formatEstonianAmountWithCents(number) {
 }
 
 module.exports = {
-  formatEstonianAmount,
-  formatEstonianAmountWithCents,
+  formatAmount: formatAmount,
+  formatAmountWithCents: formatAmountWithCents,
 };
