@@ -3,6 +3,8 @@ import Stripe from 'stripe';
 import { headers } from 'next/headers';
 import { makeDonationRequest } from '@/utils/donation';
 
+// This webhook gets called by Stripe whenever a payment goes through. Also recurring payments I believe.
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 

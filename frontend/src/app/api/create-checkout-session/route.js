@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
+// This route is called after the user presses the donate button. We collect all the form inputs from them, and redirect
+// them to stripe's checkout page.
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(request) {
