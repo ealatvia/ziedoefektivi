@@ -13,14 +13,14 @@ module.exports = [
             "data:",
             "blob:",
             "res.cloudinary.com", // TODO: remove after clearing data from cloudinary links.
-            "diplomatic-dream-7916d376b8.media.strapiapp.com"
+            "splendid-sunshine-fb3754d635.strapiapp.com"
           ],
           "media-src": [
             "'self'",
             "data:",
             "blob:",
             "res.cloudinary.com", // TODO: remove after clearing data from cloudinary links.
-            "diplomatic-dream-7916d376b8.media.strapiapp.com"
+            "splendid-sunshine-fb3754d635.strapiapp.com"
           ],
           upgradeInsecureRequests: null,
         },
