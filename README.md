@@ -4,13 +4,13 @@
 
 ## How it works
 
-We host our frontend NextJS code on Netlify. The code fetches content from our CMS, Strapi. It uses this content to build
-and display a mostly static website, with the exception of a few API routes.
+We host our frontend Next.js code on Netlify. The code fetches content from our CMS, Strapi. It uses this content to build
+and display a mostly static website, except a few API routes.
 
 Main donation flow looks like this:
 1. User fills out a form
 2. User has the option to donate via bank transfer. If they choose this option, they do a POST request to a route we have to collect their form data and send it to Strapi as a database entry.
-3. User has the option to donate via credit card. If they choose this option, they do a POST request to a route where we collect their form data, and then create a new Strip checkout session.
+3. User has the option to donate via credit card. If they choose this option, they do a POST request to a route where we collect their form data, and then create a new Stripe checkout session.
   This checkout session contains the form data. We redirect the user to this checkout session.
 4. User completes checkout. Stripe redirects them back to us, where we just show a success or fail page.
 5. When stripe processes the payment, it calls a webhook. This webhook goes to a route where we retrieve the form data, and then send it to Strapi.
@@ -26,8 +26,11 @@ Relevant files:
 TODO
 
 ## Running locally
-
-`npm run dev`
+```bash
+cd frontend
+npm install
+npm run develop
+```
 
 # Old README from the project we copied:
 # Anneta Targalt

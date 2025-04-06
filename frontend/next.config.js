@@ -3,7 +3,8 @@ const nextConfig = {
   images: {
     domains: [
       "res.cloudinary.com", // TODO: remove after clearing data from cloudinary links.
-      "splendid-sunshine-fb3754d635.strapiapp.com"
+      "splendid-sunshine-fb3754d635.strapiapp.com",
+      "splendid-sunshine-fb3754d635.media.strapiapp.com"
     ],
   },
   async redirects() {
