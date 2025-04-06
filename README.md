@@ -1,3 +1,38 @@
+# Ziedo Efektīvi
+
+"Back-end-less" website for collecting donations.
+
+## How it works
+
+We host our frontend Next.js code on Netlify. The code fetches content from our CMS, Strapi. It uses this content to build
+and display a mostly static website, except a few API routes.
+
+Main donation flow looks like this:
+1. User fills out a form
+2. User has the option to donate via bank transfer. If they choose this option, they do a POST request to a route we have to collect their form data and send it to Strapi as a database entry.
+3. User has the option to donate via credit card. If they choose this option, they do a POST request to a route where we collect their form data, and then create a new Stripe checkout session.
+  This checkout session contains the form data. We redirect the user to this checkout session.
+4. User completes checkout. Stripe redirects them back to us, where we just show a success or fail page.
+5. When stripe processes the payment, it calls a webhook. This webhook goes to a route where we retrieve the form data, and then send it to Strapi.
+
+Relevant files:
+1. components/elements/sections/DonationSection.js
+2. WIP
+3. app/api/create-checkout-session/route.js
+4. app/donation/success/page.js & app/donation/cancel/page.js
+5. app/api/webhooks/route.js
+
+## Setup
+TODO
+
+## Running locally
+```bash
+cd frontend
+npm install
+npm run develop
+```
+
+# Old README from the project we copied:
 # Anneta Targalt
 
 This is the code for the Anneta Targalt donation platform that runs at https://annetatargalt.ee/.

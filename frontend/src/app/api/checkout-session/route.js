@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
+// API route used by the success page to fetch the result of the stripe session and display some info I guess.
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function GET(request) {
