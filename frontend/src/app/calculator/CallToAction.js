@@ -5,7 +5,7 @@ export default function CallToAction() {
   return (
     <div className="flex w-full flex-col items-center space-y-6 text-center md:space-y-12">
       <h2 className="text-xl [text-wrap:balance] md:text-2xl">
-        Gudri ziedojot, Jūs varat ļoti pozitīvi ietekmēt situāciju pasaulē.
+        Gudri ziedojot, Jūs varat pozitīvi ietekmēt situāciju pasaulē.
       </h2>
       <a
         href="/"

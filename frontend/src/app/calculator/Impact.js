@@ -7,7 +7,7 @@ const charities = [
     name: "AMF",
     beforeText: "izdalīt",
     afterText:
-      "ar insekticīdiem apstrādātu gultas tīklu ģimenēm, kas dzīvo malārijas rajonos",
+      "ar insekticīdiem apstrādātu gultas tīklus ģimenēm, kas dzīvo malārijas rajonos",
     icon: MosquitoNetIcon,
   },
   {
@@ -19,7 +19,7 @@ const charities = [
   {
     name: "NI",
     beforeText: "vakcinēt",
-    afterText: "bērnu pret vairākām slimībām",
+    afterText: "bērnus pret vairākām slimībām",
     icon: ChildrenIcon,
   },
 ];
