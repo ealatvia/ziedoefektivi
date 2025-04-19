@@ -40,7 +40,7 @@ export default function OrgHeaderSection({ breadcrumbs, entity, global }) {
             <div className="flex flex-col-reverse justify-center gap-6 xs:flex-row-reverse xs:items-center md:justify-end lg:flex-row">
               {entity.homepage && (
                 <Button
-                  text="Koduleht"
+                  text="Tīmekļa vietne"
                   href={entity.homepage}
                   type="text"
                   size="sm"
@@ -49,7 +49,7 @@ export default function OrgHeaderSection({ breadcrumbs, entity, global }) {
                 />
               )}
               <Button
-                text="Anneta"
+                text="Ziedot"
                 href={`${global.donateLink}?org=${entity.id}`}
                 type="primary"
                 size="lg"

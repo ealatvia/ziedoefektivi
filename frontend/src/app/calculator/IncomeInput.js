@@ -28,8 +28,8 @@ export default function IncomeInput({ submitIncome }) {
       <div>
         <label htmlFor="incomeInput" className="mb-1 block text-sm">
           {changingHousehold
-            ? "Leibkonna igakuine netosissetulek:"
-            : "Igakuine netosissetulek:"}
+            ? "Mājsaimniecības neto ienākumi mēnesī:"
+            : "Neto ienākumi mēnesī:"}
         </label>
         <div className="relative text-xl">
           <input
@@ -50,7 +50,7 @@ export default function IncomeInput({ submitIncome }) {
           <div className="flex flex-row space-x-4">
             <div className="flex w-full flex-col">
               <label htmlFor="adultsInput" className="mb-1 block text-sm">
-                Täiskasvanuid:
+              Pieaugušie:
               </label>
               <input
                 id="adultsInput"
@@ -64,7 +64,7 @@ export default function IncomeInput({ submitIncome }) {
             </div>
             <div className="flex w-full flex-col">
               <label htmlFor="childrenInput" className="mb-1 block text-sm">
-                Lapsi:
+                Bērni:
               </label>
               <input
                 id="childrenInput"
@@ -78,14 +78,14 @@ export default function IncomeInput({ submitIncome }) {
             </div>
           </div>
           <div className="text-sm">
-            Kasutame{" "}
+            Mēs izmantojam{" "}
             <a
               href="https://en.wikipedia.org/wiki/Equivalisation"
               className="font-semibold text-primary-700 hover:opacity-70"
               target="_blank"
               rel="noopener noreferrer"
             >
-              OECD ekvivaliseerimist
+              OECD ekvivalizāciju
               <ArrowTopRightOnSquareIcon className="mb-1 ml-1 inline h-4 w-4" />
             </a>
             .
@@ -93,13 +93,13 @@ export default function IncomeInput({ submitIncome }) {
         </div>
       ) : (
         <div className="flex flex-row space-x-1 text-sm">
-          <div>Leibkonnakoosseis: 1 täiskasvanu</div>
+          <div>Cilvēku skaits mājsaimniecībā: 1 pieaugušais</div>
           <button
             type="button"
             className="opacity cursor-pointer font-bold text-primary-700 hover:opacity-70"
             onClick={() => setChangingHousehold(true)}
           >
-            Muuda
+            Mainīt
           </button>
         </div>
       )}
@@ -109,11 +109,11 @@ export default function IncomeInput({ submitIncome }) {
           className="mt-4 block w-full items-center justify-center gap-1.5 rounded-md bg-primary-700 px-4 py-3 text-center font-semibold tracking-tight text-white shadow-sm hover:bg-primary-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-primary-600"
           disabled={!valid}
         >
-          Arvuta!
+          Aprēķināt!
         </button>
       </div>
       <p className="text-center text-sm">
-        Me ei salvesta sinu sisestatud andmeid.
+        Mēs nesaglabājam Jūsu ievadīto informāciju.
       </p>
     </form>
   );

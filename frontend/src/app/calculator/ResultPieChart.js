@@ -37,8 +37,8 @@ export default function ResultPieChart({
   animated = true,
 }) {
   const data = [
-    { name: `Sinust rikkamad`, value: +topPercentile },
-    { name: `Sinust vaesemad`, value: +percentile },
+    { name: `Bagātāki par Jums`, value: +topPercentile },
+    { name: `Nabadzīgāki par Jums`, value: +percentile },
   ];
 
   return (

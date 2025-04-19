@@ -5,7 +5,7 @@ export default function CallToAction() {
   return (
     <div className="flex w-full flex-col items-center space-y-6 text-center md:space-y-12">
       <h2 className="text-xl [text-wrap:balance] md:text-2xl">
-        Gudri ziedojot, Jūs varat ļoti pozitīvi ietekmēt palīdzību cilvēkiem.
+        Gudri ziedojot, Jūs varat ļoti pozitīvi ietekmēt situāciju pasaulē.
       </h2>
       <a
         href="/"
@@ -14,7 +14,7 @@ export default function CallToAction() {
         rel="noopener noreferrer"
         onClick={() => GCEvent("cta-click")}
       >
-        Vēlos uzzināt par gudru ziedošanu.
+        Vēlos uzzināt par efektīvo ziedošanu.
         <ArrowTopRightOnSquareIcon className="mb-0.5 ml-2 inline h-5 w-5" />
       </a>
     </div>

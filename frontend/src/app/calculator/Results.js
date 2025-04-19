@@ -76,36 +76,35 @@ export default function Results({ income, evaluations }) {
     >
       <HorizontalRule />
       <h2 className="text-2xl text-center">
-        Kuulud{" "}
+        Jūs esat starp{" "}
         <span className="font-bold tracking-tight text-primary-700">
           {topPercentile <= 1 && "<"}
           {topPercentile >= 99 && ">"}
           {formatNumber(topPercentile)}%
         </span>{" "}
-        rikkaimate hulka!
+        bagātāko pasaules iedzīvotāju!
       </h2>
       <div className="w-64 h-64 md:h-96 md:w-96">
         <ResultPieChart percentile={percentile} topPercentile={topPercentile} />
       </div>
       <div className="text-xl text-center">
-        Oled rikkam kui{" "}
+      Jūs esat bagātāks par{" "}
         <span className="font-bold tracking-tight text-primary-700">
           {percentile >= 99 && ">"}
           {percentile <= 1 && "<"}
           {formatNumber(percentile)}%
         </span>{" "}
-        inimkonnast.
+        cilvēces.
       </div>
       {timesRicherThanMedian >= 2 && (
         <>
           <HorizontalRule />
           <h2 className="text-xl text-center">
-            Sinu sissetulek on{" "}
+          Jūsu ienākumi ir{" "}
             <span className="font-bold tracking-tight text-primary-700">
-              {formatNumber(round(timesRicherThanMedian, 1))} korda
-              suurem
+              {formatNumber(round(timesRicherThanMedian, 1))} reizes lielāki
             </span>{" "}
-            kui maailma mediaan.
+            par pasaules mediānu.
           </h2>
           <div className="flex flex-col space-y-8">
             <div className="w-80 h-64 sm:w-96 sm:h-80 md:h-96 md:w-144">
@@ -115,14 +114,14 @@ export default function Results({ income, evaluations }) {
               />
             </div>
             <div className="text-xs text-center md:text-sm">
-              Sissetulekud on teisendatud{" "}
+            Ienākumi, kas konvertēti{" "}
               <a
                 className="font-semibold text-primary-700 hover:opacity-70"
                 href="https://en.wikipedia.org/wiki/International_dollar"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                rahvusvahelisteks dollariteks
+                starptautiskajos dolāros
                 <ArrowTopRightOnSquareIcon className="inline mb-0.5 ml-1 w-4 h-4" />
               </a>
               .
@@ -132,11 +131,11 @@ export default function Results({ income, evaluations }) {
             <>
               <HorizontalRule />
               <h2 className="text-xl text-center">
-                Kui annetaksid{" "}
+                Ja Jūs ziedotu{" "}
                 <span className="font-bold tracking-tight text-primary-700">
                   {donationPercentage}%
                 </span>{" "}
-                oma sissetulekust ...
+                no saviem ienākumiem...
               </h2>
               <SliderInput
                 percentage={donationPercentage}
@@ -146,11 +145,11 @@ export default function Results({ income, evaluations }) {
               />
               <HorizontalRule />
               <h2 className="text-xl text-center">
-                ... kuuluksid ikka{" "}
+                ... Jūs joprojām būtu starp{" "}
                 <span className="font-bold tracking-tight text-primary-700">
                   {formatNumber(afterDonating.topPercentile)}%
                 </span>{" "}
-                rikkaimate hulka ...
+                turīgāko iedzīvotāju pasaulē ...
               </h2>
               <div className="w-64 h-64 md:h-96 md:w-96">
                 <ResultPieChart
@@ -160,14 +159,14 @@ export default function Results({ income, evaluations }) {
                 />
               </div>
               <div className="text-xl text-center">
-                ... ning sinu sissetulek oleks ikka{" "}
+                ... Jūsu ienākumi joprojām būtu{" "}
                 <span className="font-bold tracking-tight text-primary-700">
                   {formatNumber(
                     round(afterDonating.timesRicherThanMedian, 1)
                   )}{" "}
-                  korda suurem
+                  reizes lielāki
                 </span>{" "}
-                kui maailma mediaan.
+                par pasaules vidējo rādītāju.
               </div>
               <div className="flex flex-col space-y-8">
                 <div className="w-80 h-64 sm:w-96 sm:h-80 md:h-96 md:w-144">
@@ -181,15 +180,15 @@ export default function Results({ income, evaluations }) {
               </div>
               <HorizontalRule />
               <h2 className="text-xl text-center">
-                Igal aastal sinu{" "}
+                Katru gadu Jūsu{" "}
                 <span className="font-bold tracking-tight text-primary-700">
                   {formatNumber(roundMoney(yearlyDonation))} €
                 </span>{" "}
-                annetus saaks aidata ...
+                ziedojums varētu palīdzēt...
               </h2>
               <Impact evaluations={evaluations} donation={yearlyDonation} />
               <div className="text-xl text-center">
-                ... kui annetaksid maailma tõhusaimatele heategevusühingutele.
+                ... ja Jūs ziedotu pasaules efektīvākajām labdarības organizācijām.
               </div>
             </>
           )}

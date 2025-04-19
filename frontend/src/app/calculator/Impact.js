@@ -5,21 +5,21 @@ import { ChildrenIcon, MedicineIcon, MosquitoNetIcon } from "./icons";
 const charities = [
   {
     name: "AMF",
-    beforeText: "viia",
+    beforeText: "izdalīt",
     afterText:
-      "ar insekticīdiem apstrādāti gultas tīkli ģimenēm, kas dzīvo malārijas rajonos",
+      "ar insekticīdiem apstrādātu gultas tīklu ģimenēm, kas dzīvo malārijas rajonos",
     icon: MosquitoNetIcon,
   },
   {
     name: "HKI",
-    beforeText: "anda",
-    afterText: "A vitamīna piedevas nepietiekama uztura bērnam",
+    beforeText: "nodrošināt",
+    afterText: "A vitamīna piedevas bērniem ar nepietiekamu uzturu",
     icon: MedicineIcon,
   },
   {
     name: "NI",
-    beforeText: "vaktsineerida",
-    afterText: "pret daudzām bērnu slimībām",
+    beforeText: "vakcinēt",
+    afterText: "bērnu pret vairākām slimībām",
     icon: ChildrenIcon,
   },
 ];
