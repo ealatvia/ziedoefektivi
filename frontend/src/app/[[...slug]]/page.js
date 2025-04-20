@@ -1,6 +1,6 @@
 import Page from "../../components/Page";
 import { buildMetadata } from "../../utils/seo";
-import { getGlobal, getPageBySlug, findSpecialPage } from "../../utils/strapi";
+import { getGlobal, getPageBySlug, findSpecialPage, getDonationInfo } from "../../utils/strapi";
 
 async function getSlug(params) {
   // Await the params object first
@@ -28,6 +28,7 @@ export async function generateMetadata({ params }) {
 export default async function SlugPage({ params }) {
   const slug = await getSlug(params);
   const global = await getGlobal();
+  const donationInfo = await getDonationInfo();
 
   const specialPage = await findSpecialPage(slug);
   if (specialPage) {
@@ -36,10 +37,11 @@ export default async function SlugPage({ params }) {
             page={specialPage.page}
             entity={specialPage.entity}
             global={global}
+            donationInfo={donationInfo}
         />
     );
   }
 
   const page = await getPageBySlug(slug);
-  return <Page page={page} global={global} />;
+  return <Page page={page} global={global} donationInfo={donationInfo} />;
 }

@@ -1,5 +1,6 @@
-// Your Discord webhook URL
+// Your Discord webhook URLs
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
+const DONATION_WEBHOOK_URL = process.env.DONATION_WEBHOOK_URL;
 
 // Optional: Configure which log levels you want to send to Discord
 const LOG_LEVELS_TO_DISCORD = ['error', 'warn', 'info']; // 'debug', 'log'
@@ -100,6 +101,63 @@ class DiscordLogger {
       }]
     };
   }
+
+  async logDonation(donation, paymentMethod, paymentId = null, organizations = []) {
+    if (!DONATION_WEBHOOK_URL) {
+      return;
+    }
+
+    try {
+      // Format the donation proportions, sorting by order if available
+      let proportionsText = '';
+      if (organizations.length > 0) {
+        // Sort organizations by order if it exists
+        const sortedOrgs = [...organizations].sort((a, b) => {
+          // If order exists, sort by it
+          if (typeof a.order === 'number' && typeof b.order === 'number') {
+            return a.order - b.order;
+          }
+          return 0; // Keep original order if no order field
+        });
+        
+        // Map to strings
+        proportionsText = sortedOrgs.map(org => {
+          // Show amounts instead of percentages
+          const amount = typeof org.amount === 'number' ? org.amount.toFixed(2) : '0.00';
+          // Use the organization name as provided (which is the cause title)
+          return `${org.name}: ${amount}€`;
+        }).join(' ');
+      } else if (donation.proportions) {
+        // Fallback to raw proportions if available
+        proportionsText = JSON.stringify(donation.proportions);
+      }
+      
+      // Build the message - total amount at the beginning
+      const amountText = `${donation.amount.toFixed(2)}€`;
+      let message = `${donation.id} ${amountText} ${proportionsText}`;
+      
+      // Add payment method info
+      if (paymentMethod === 'stripe' && paymentId) {
+        message += ` Stripe payment ID: ${paymentId}`;
+      } else if (paymentMethod === 'bank') {
+        message += ` (bank transfer)`;
+      }
+
+      // Send to Discord webhook
+      await fetch(DONATION_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: message
+        }),
+      });
+    } catch (error) {
+      // Use original console to avoid infinite loops
+      this.originalConsole.error('Failed to send donation log to Discord:', error);
+    }
+  }
 }
 
 // Create singleton instance
@@ -112,4 +170,17 @@ export function initLogger() {
     console.info('Discord logger initialized');
   }
   return logger;
+}
+
+// Get the singleton logger instance
+export function getLogger() {
+  return logger || initLogger();
+}
+
+// Helper function to log donations
+export async function logDonation(donation, paymentMethod, paymentId = null, organizations = []) {
+  const logger = getLogger();
+  if (logger) {
+    await logger.logDonation(donation, paymentMethod, paymentId, organizations);
+  }
 }

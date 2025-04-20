@@ -28,8 +28,8 @@ TODO
 ## Running locally
 ```bash
 cd frontend
-npm install
-npm run develop
+yarn install
+yarn run develop
 ```
 
 # Old README from the project we copied:

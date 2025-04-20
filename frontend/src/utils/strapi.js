@@ -66,6 +66,9 @@ export async function getGlobal() {
 
   const response = await fetchAPI(path, urlParamsObject, options);
 
+  if (response == null || response.data == null) {
+    console.error("Missing data.attributes from response: " + JSON.stringify(response));
+  }
   return response.data.attributes;
 }
 
@@ -180,7 +183,7 @@ export function snakeCaseToPascalCase(string) {
     .join("");
 }
 
-export async function getOrganizaitons() {
+export async function getOrganizations() {
   const path = "/organizations";
   const options = headersWithAuthToken();
   const urlParamsObject = {
@@ -202,4 +205,19 @@ export async function getOrganizaitons() {
   });
 
   return organizations;
+}
+
+export async function getDonationInfo() {
+  const path = "/donation-info";
+  const options = headersWithAuthToken();
+  const urlParamsObject = { populate: "deep" };
+
+  const response = await fetchAPI(path, urlParamsObject, options);
+  
+  if (response == null || response.data == null) {
+    console.error("Missing data.attributes from donation-info response: " + JSON.stringify(response));
+    return null;
+  }
+  
+  return response.data.attributes;
 }

@@ -8,10 +8,12 @@ in pkgs.mkShell {
     nodejs
     nodePackages.npm
     yarn
+    # Stripe
+    stripe-cli
   ];
 
   shellHook = ''
-    export PATH="${NPM_CONFIG_PREFIX}/bin:$PATH"
+    export PATH="${NPM_CONFIG_PREFIX}/bin:$HOME/.npm-global/bin:$PATH"
   '';
 
 

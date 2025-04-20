@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { headers } from 'next/headers';
 import { makeDonationRequest } from '@/utils/donation';
+import { logDonation } from '@/lib/discordLogger';
+import { fetchAPI } from '@/utils/strapi';
 
 // This webhook gets called by Stripe whenever a payment goes through. Also recurring payments I believe.
 
@@ -39,6 +41,8 @@ export async function POST(request) {
                 lastName,
                 idCode,
                 proportions,
+                organizationInfo,
+                donationId,
                 companyName,
                 companyCode,
                 dedicationName,
@@ -78,6 +82,41 @@ export async function POST(request) {
                     console.error('Error sending donation to Strapi:', error);
                     // We don't throw here as we don't want Stripe to retry the webhook
                     // Just log the error and continue
+                } else {
+                    console.log("Successfully sent donation to Strapi: " + JSON.stringify(donationData));
+                    
+                    // Log donation to Discord
+                    try {
+                        const { logDonation } = require('@/lib/discordLogger');
+                        
+                        // Parse organization info
+                        const organizations = [];
+                        if (organizationInfo) {
+                            const orgData = JSON.parse(organizationInfo);
+                            Object.values(orgData).forEach(org => {
+                                organizations.push({
+                                    name: org.name,
+                                    amount: org.amount || 0, // Use the exact amount
+                                    percentage: Math.round(org.percentage || 0), // Keep percentage for backwards compatibility
+                                    order: org.order // Include order for sorting
+                                });
+                            });
+                        }
+                        
+                        // Log to dedicated Discord channel
+                        await logDonation(
+                            { 
+                                id: donationId || session.id,
+                                amount: donationData.amount + donationData.tipAmount,
+                                tipOrganization: donationData.tipOrganization,
+                            }, 
+                            'stripe', 
+                            session.id,
+                            organizations
+                        );
+                    } catch (logError) {
+                        console.error('Error logging donation to Discord:', logError);
+                    }
                 }
             } catch (error) {
                 console.error('Error processing donation:', error);

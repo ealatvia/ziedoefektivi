@@ -1,8 +1,8 @@
-import { getOrganizaitons } from "@/utils/strapi";
+import { getOrganizations } from "@/utils/strapi";
 import Organization from "../elements/Organization";
 
 export default async function SpecialOrganizationsSection({ global }) {
-  const organizations = await getOrganizaitons();
+  const organizations = await getOrganizations();
 
   return (
     <section className="bg-slate-200 py-24">

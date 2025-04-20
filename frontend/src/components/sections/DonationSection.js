@@ -21,6 +21,7 @@ import Modal from "../Modal";
 import CompanyInput from "../elements/forms/CompanyInput";
 import DedicationInput from "../elements/forms/DedicationInput";
 import { GCEvent } from "next-goatcounter";
+import { amountsFromProportions } from "@/utils/donation";
 
 const initiateStripeCheckout = async (donationData) => {
   try {
@@ -68,6 +69,7 @@ export default function DonationSection(props) {
   const [donation, setDonation] = useState({
     amount: amountOptions[1].value,
     type: typeParam === "recurring" ? "recurring" : "onetime",
+    id: "",
     firstName: "",
     lastName: "",
     email: "",
@@ -83,6 +85,35 @@ export default function DonationSection(props) {
     addTip: false,
     acceptTerms: false,
   });
+
+  const buildDonationId = () => {
+    // Start with prefix
+    let donationId = "ziedojums-";
+    
+    // Add proportion percentages for each cause in order
+    donation.proportions.keys().forEach(key => {
+      const proportion = donation.proportions.getProportion(key);
+      
+      // Convert proportion to characters: 00 for 0%, 99 for 99%, C for 100%
+      let proportionCode;
+      if (proportion < 10) {
+        proportionCode = "0" + proportion.toString();
+      } else if (proportion === 100) {
+        proportionCode = "C";
+      } else {
+        proportionCode = proportion.toString();
+      }
+      
+      donationId += proportionCode;
+    });
+    
+    // Add 't' suffix if the user opted to add a tip
+    if (donation.addTip) {
+      donationId += "t";
+    }
+    
+    return donationId;
+  }
 
   const [validity, setValidity] = useState({});
   const stageValidity = {
@@ -107,7 +138,146 @@ export default function DonationSection(props) {
       : 0;
   const totalAmount = Math.round((donation.amount + tipAmount) * 100) / 100;
 
-  const donate = async () => {
+  // Generate the donation ID and set it in state when entering stage 3
+  const updateDonationId = () => {
+    const donationId = buildDonationId();
+    setDonation(prevDonation => ({ ...prevDonation, id: donationId }));
+    return donationId;
+  }
+  
+  const donateWithBank = async () => {
+    // Use donation ID from state or generate a new one
+    const donationId = donation.id || updateDonationId();
+    
+    // Build organization info map with cause titles and exact amounts
+    const organizationInfo = {};
+    
+    // Get exact amounts per organization using the same function as PaymentSummary
+    const organizationAmounts = amountsFromProportions({
+      proportions: donation.proportions,
+      causes: props.causes,
+      totalAmount: donation.amount,
+    });
+    
+    // Create entries for each cause with its amount - in the same order as donation.proportions.keys()
+    const orderedCauses = [];
+    donation.proportions.keys().forEach(causeId => {
+      const causeProportion = donation.proportions.getProportion(causeId);
+      if (causeProportion > 0) {
+        const cause = props.causes.data.find(c => c.id === causeId);
+        if (cause) {
+          orderedCauses.push({ id: causeId, cause });
+        }
+      }
+    });
+    
+    // Map the ordered causes to organizationInfo
+    orderedCauses.forEach(({ id: causeId, cause }) => {
+      // Sum up amounts for all organizations in this cause
+      let causeAmount = 0;
+      cause.attributes.organizations.data.forEach(org => {
+        if (organizationAmounts[org.id]) {
+          causeAmount += organizationAmounts[org.id];
+        }
+      });
+      
+      // Round to 2 decimal places
+      causeAmount = Math.round(causeAmount * 100) / 100;
+      
+      // Add to organizationInfo
+      organizationInfo[causeId] = {
+        name: cause.attributes.title,
+        amount: causeAmount,
+        percentage: donation.proportions.getProportion(causeId),
+        order: orderedCauses.findIndex(item => item.id === causeId) // Add order for sorting
+      };
+    });
+    
+    // Add tip as another entry if it exists
+    if (donation.addTip && tipAmount > 0) {
+      organizationInfo['tip'] = {
+        name: props.global.tipOrganization,
+        amount: tipAmount,
+        percentage: 0,
+        order: Object.keys(organizationInfo).length // Place at the end
+      };
+    }
+    
+    const donationData = {
+      ...donation,
+      id: donationId,
+      organizationInfo: JSON.stringify(organizationInfo),
+      tipAmount: tipAmount,
+      tipOrganization: props.global.tipOrganization
+    };
+    
+    const response = await fetch('/api/register-bank-donation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(donationData),
+    });
+  }
+
+  const donateWithCard = async () => {
+    // Use donation ID from state or generate a new one
+    const donationId = donation.id || updateDonationId();
+    
+    // Build organization info map with cause titles and exact amounts
+    const organizationInfo = {};
+    
+    // Get exact amounts per organization using the same function as PaymentSummary
+    const organizationAmounts = amountsFromProportions({
+      proportions: donation.proportions,
+      causes: props.causes,
+      totalAmount: donation.amount,
+    });
+    
+    // Create entries for each cause with its amount - in the same order as donation.proportions.keys()
+    const orderedCauses = [];
+    donation.proportions.keys().forEach(causeId => {
+      const causeProportion = donation.proportions.getProportion(causeId);
+      if (causeProportion > 0) {
+        const cause = props.causes.data.find(c => c.id === causeId);
+        if (cause) {
+          orderedCauses.push({ id: causeId, cause });
+        }
+      }
+    });
+    
+    // Map the ordered causes to organizationInfo
+    orderedCauses.forEach(({ id: causeId, cause }) => {
+      // Sum up amounts for all organizations in this cause
+      let causeAmount = 0;
+      cause.attributes.organizations.data.forEach(org => {
+        if (organizationAmounts[org.id]) {
+          causeAmount += organizationAmounts[org.id];
+        }
+      });
+      
+      // Round to 2 decimal places
+      causeAmount = Math.round(causeAmount * 100) / 100;
+      
+      // Add to organizationInfo
+      organizationInfo[causeId] = {
+        name: cause.attributes.title,
+        amount: causeAmount,
+        percentage: donation.proportions.getProportion(causeId),
+        order: orderedCauses.findIndex(item => item.id === causeId) // Add order for sorting
+      };
+    });
+    
+    // Add tip as another entry if it exists
+    if (donation.addTip && tipAmount > 0) {
+      organizationInfo['tip'] = {
+        name: props.global.tipOrganization,
+        amount: tipAmount,
+        percentage: 0,
+        order: Object.keys(organizationInfo).length // Place at the end
+      };
+    }
+    
     const donationData = {
       ...pick(donation, [
         "amount",
@@ -118,10 +288,14 @@ export default function DonationSection(props) {
         "idCode",
         "proportions",
       ]),
+      tipAmount: tipAmount,
+      tipOrganization: props.global.tipOrganization,
       totalAmount,
       currency: props.global.currency.toLowerCase(),
       successUrl: `${window.location.origin}/donation/success`,
       cancelUrl: `${window.location.origin}/donation/cancel`,
+      id: donationId,
+      organizationInfo: JSON.stringify(organizationInfo),
     };
 
     if (donation.companyDonation) {
@@ -149,6 +323,10 @@ export default function DonationSection(props) {
     donation.type === "recurring"
       ? props.recurringDonationSummary
       : props.oneTimeDonationSummary;
+
+  // Get recipient and IBAN from donationInfo if available
+  const recipient = props.donationInfo?.recipient || "Missing recipient";
+  const iban = props.donationInfo?.iban || "Missing IBAN";
 
   return (
       <section className="flex h-full flex-grow items-start justify-center bg-slate-200 xs:px-4 xs:py-16 sm:px-8 sm:py-32">
@@ -326,6 +504,7 @@ export default function DonationSection(props) {
                         size="lg"
                         onClick={() => {
                           GCEvent("donation-summary-stage");
+                          updateDonationId(); // Generate and set the donation ID
                           setStage(3);
                         }}
                         buttonType="submit"
@@ -362,18 +541,40 @@ export default function DonationSection(props) {
                         }
                     />
                     <Button
-                        text={props.donateButtonText}
+                        text="Ziedot ar karti"
                         type="primary"
                         size="lg"
                         onClick={() => {
                           GCEvent("donation-clicked");
-                          donate();
+                          donateWithCard();
+                        }}
+                        disabled={!stageValidity[3]}
+                        buttonType="submit"
+                        className="mt-4"
+                    />
+                    <Button
+                        text="Ziedot ar bankas pārskaitījumu"
+                        type="primary"
+                        size="lg"
+                        onClick={() => {
+                          GCEvent("donation-clicked");
+                          setStage(4);
+                          donateWithBank();
                         }}
                         disabled={!stageValidity[3]}
                         buttonType="submit"
                         className="mt-4"
                     />
                   </form>
+              )}
+              {stage === 4 && (
+                  <div>
+                    <p>Jūsu ziedojums ir veiksmīgi reģistrēts. Lūdzu, veiciet pārskaitījumu.</p>
+                    <p> Adresāts: <strong>{props.donationInfo?.recipient}</strong></p>
+                    <p> IBAN: <strong>{props.donationInfo?.iban}</strong></p>
+                    <p> Pārskaitījuma mērķis: <strong>{donation.id}</strong></p>
+                    <p> Summa: <strong>{totalAmount.toFixed(2)} EUR</strong></p>
+                  </div>
               )}
             </div>
         )}
