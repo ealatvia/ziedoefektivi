@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 export default function SuccessPage({
-                                        title = "Thank you for your donation!",
-                                        description = "Your payment has been processed successfully. You will receive a confirmation email shortly.",
-                                        recurringDescription = "Your recurring donation has been set up successfully. The first payment has been processed and future payments will be automatically charged monthly.",
+                                        title = "Paldies par ziedojumu!",
+                                        description = "Tavs ziedojums ir veiksmīgi saņemts.",
+                                        recurringDescription = "Tavs pirmais regulārā ziedojuma maksājums ir saņemts. Lai atceltu vai veiktu izmainas regularājam ziedojumam, sazinieties ar mums!",
                                     }) {
     const searchParams = useSearchParams();
     const [loading, setLoading] = useState(true);
@@ -20,6 +20,11 @@ export default function SuccessPage({
                 .then((data) => {
                     setSession(data);
                     setLoading(false);
+                    
+                    // Log the donation to Discord with status "pending"
+                    if (data.metadata) {
+                        logDonationToDiscord(data);
+                    }
                 })
                 .catch((err) => {
                     console.error('Error:', err);
@@ -29,6 +34,62 @@ export default function SuccessPage({
             setLoading(false);
         }
     }, [searchParams]);
+
+    // Function to log the donation to Discord
+    const logDonationToDiscord = async (sessionData) => {
+        try {
+            const metadata = sessionData.metadata;
+            const amount = sessionData.amount_total / 100; // Convert cents to euros
+            
+            // Parse organization info from the session metadata
+            const organizations = [];
+            if (metadata.organizationInfo) {
+                const orgData = JSON.parse(metadata.organizationInfo);
+                Object.values(orgData).forEach(org => {
+                    organizations.push({
+                        name: org.name,
+                        amount: org.amount || 0,
+                        percentage: Math.round(org.percentage || 0),
+                        order: org.order
+                    });
+                });
+            }
+            
+            // Calculate tip amount (if any) - assuming it's included in the organization info
+            let tipAmount = 0;
+            if (organizations.length > 0) {
+                const tipOrg = organizations.find(org => org.name === metadata.tipOrganization);
+                if (tipOrg) {
+                    tipAmount = tipOrg.amount || 0;
+                }
+            }
+            
+            // Prepare the donation data for logging
+            const donationData = {
+                id: metadata.donationId || sessionData.payment_intent,
+                amount: amount,
+                tipAmount: tipAmount,
+                tipOrganization: metadata.tipOrganization
+            };
+            
+            // Send the log request to the API
+            await fetch('/api/log-donation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    donation: donationData,
+                    paymentId: sessionData.payment_intent,
+                    organizations
+                }),
+            });
+            
+            console.log('Donation logged to Discord');
+        } catch (error) {
+            console.error('Error logging donation to Discord:', error);
+        }
+    };
 
     if (loading) {
         return (
