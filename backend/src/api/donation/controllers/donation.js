@@ -51,7 +51,7 @@ module.exports = createCoreController(
         return ctx.send({ redirectURL });
       } catch (error) {
         console.error(error);
-        return ctx.badRequest("Failed to create single donation");
+        return ctx.badRequest("Failed to create single donation" + error.toString());
       }
     },
 
