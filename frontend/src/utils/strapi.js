@@ -206,18 +206,3 @@ export async function getOrganizations() {
 
   return organizations;
 }
-
-export async function getDonationInfo() {
-  const path = "/donation-info";
-  const options = headersWithAuthToken();
-  const urlParamsObject = { populate: "deep" };
-
-  const response = await fetchAPI(path, urlParamsObject, options);
-  
-  if (response == null || response.data == null) {
-    console.error("Missing data.attributes from donation-info response: " + JSON.stringify(response));
-    return null;
-  }
-  
-  return response.data.attributes;
-}

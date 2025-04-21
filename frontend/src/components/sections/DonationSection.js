@@ -63,12 +63,11 @@ export default function DonationSection(props) {
     value: amount,
     label: `${amount}${props.global.currency}`,
   }));
-  const typeParam = searchParams.get("type");
   const orgParam = Number(searchParams.get("org"));
 
-  const [donation, setDonation] = useState({
-    amount: amountOptions[1].value,
-    type: typeParam === "recurring" ? "recurring" : "onetime",
+  const [donation, setDonation] = useState(() => ({
+    amount: null,
+    type: "",
     id: "",
     firstName: "",
     lastName: "",
@@ -84,7 +83,7 @@ export default function DonationSection(props) {
     proportions: Proportions.fromStrapiData(props.causes.data, orgParam),
     addTip: false,
     acceptTerms: false,
-  });
+  }));
 
   const buildDonationId = () => {
     // Start with prefix
@@ -117,7 +116,7 @@ export default function DonationSection(props) {
 
   const [validity, setValidity] = useState({});
   const stageValidity = {
-    0: at(validity, ["amount"]).every(Boolean),
+    0: at(donation, ["amount", "type"]).every(Boolean),
     1: at(validity, [
       "firstName",
       "lastName",
@@ -141,7 +140,7 @@ export default function DonationSection(props) {
   // Generate the donation ID and set it in state when entering stage 3
   const updateDonationId = () => {
     const donationId = buildDonationId();
-    setDonation(prevDonation => ({ ...prevDonation, id: donationId }));
+    setDonation({ ...donation, id: donationId });
     return donationId;
   }
   
@@ -323,10 +322,6 @@ export default function DonationSection(props) {
     donation.type === "recurring"
       ? props.recurringDonationSummary
       : props.oneTimeDonationSummary;
-
-  // Get recipient and IBAN from donationInfo if available
-  const recipient = props.donationInfo?.recipient || "Missing recipient";
-  const iban = props.donationInfo?.iban || "Missing IBAN";
 
   return (
       <section className="flex h-full flex-grow items-start justify-center bg-slate-200 xs:px-4 xs:py-16 sm:px-8 sm:py-32">
@@ -570,10 +565,14 @@ export default function DonationSection(props) {
               {stage === 4 && (
                   <div>
                     <p>Jūsu ziedojums ir veiksmīgi reģistrēts. Lūdzu, veiciet pārskaitījumu.</p>
-                    <p> Adresāts: <strong>{props.donationInfo?.recipient}</strong></p>
-                    <p> IBAN: <strong>{props.donationInfo?.iban}</strong></p>
-                    <p> Pārskaitījuma mērķis: <strong>{donation.id}</strong></p>
+                    <p> Adresāts: <strong>{props.donationInfo ? props.donationInfo.recipient : "NVO Effective Altruism Latvia"}</strong>
+                    </p>
+                    <p> IBAN: <strong>{props.donationInfo ? props.donationInfo.iban : "LV14HABA0551056160825"}</strong>
+                    </p>
                     <p> Summa: <strong>{totalAmount.toFixed(2)} EUR</strong></p>
+                    <p> Maksājuma mērķis: <strong>{donation.id}</strong></p>
+                    <br/>
+                    <p>Ja vēlaties ziedot regulāri vai atkārtoti, lūdzu, izmantojiet to pašu maksājuma mērķi!</p>
                   </div>
               )}
             </div>

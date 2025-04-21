@@ -2,7 +2,7 @@ import Footer from "./Footer";
 import Navbar from "./Navbar";
 import Section from "./Section";
 
-export default function Page({ page, global, entity, donationInfo }) {
+export default function Page({ page, global, entity }) {
   return (
     <>
       <Navbar global={global} />
@@ -13,7 +13,6 @@ export default function Page({ page, global, entity, donationInfo }) {
           global={global}
           page={page}
           entity={entity}
-          donationInfo={donationInfo}
         />
       ))}
       <Footer global={global} />
