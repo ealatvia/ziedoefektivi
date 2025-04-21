@@ -19,7 +19,8 @@ export async function GET(request) {
                 payment_intent: session.payment_intent?.id || session.subscription?.id,
                 customer_email: session.customer_email,
                 amount_total: session.amount_total,
-                subscription: session.subscription ? true : false,
+                subscription: !!session.subscription,
+                metadata: session.metadata, // Include the metadata from the session for logging
             });
         } else {
             return NextResponse.json(
