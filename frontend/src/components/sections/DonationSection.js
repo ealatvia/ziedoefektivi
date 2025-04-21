@@ -47,7 +47,6 @@ const initiateStripeCheckout = async (donationData) => {
 };
 
 export default function DonationSection(props) {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -313,8 +312,6 @@ export default function DonationSection(props) {
       tipOrganization: props.global.tipOrganization,
       totalAmount,
       currency: props.global.currency.toLowerCase(),
-      successUrl: `${window.location.origin}/donation/success`,
-      cancelUrl: `${window.location.origin}/donation/cancel`,
       id: donationId,
       organizationInfo: JSON.stringify(organizationInfo),
     };
