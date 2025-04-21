@@ -89,7 +89,7 @@ export async function POST(request) {
                     try {
                         const { logDonation } = require('@/lib/discordLogger');
                         
-                        // Parse organization info
+                        // Parse organization info, setting 0 where data is missing to always have it in the message
                         const organizations = [];
                         if (organizationInfo) {
                             const orgData = JSON.parse(organizationInfo);

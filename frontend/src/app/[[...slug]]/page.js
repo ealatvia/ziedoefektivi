@@ -36,7 +36,6 @@ export default async function SlugPage({ params }) {
             page={specialPage.page}
             entity={specialPage.entity}
             global={global}
-            donationInfo={donationInfo}
         />
     );
   }
