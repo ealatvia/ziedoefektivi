@@ -3,6 +3,8 @@ import {makeDonationRequest} from "@/utils/donation";
 import {logDonation} from "@/lib/discordLogger";
 
 export async function POST(request) {
+    let loggedToDiscord = false;
+    let loggedToStrapi = false;
     try {
         const donation = JSON.parse(await request.text());
         console.log("Received bank donation intention: " + JSON.stringify(donation));
@@ -34,6 +36,7 @@ export async function POST(request) {
                 null,
                 organizations
             );
+            loggedToDiscord = true;
         } catch (logError) {
             console.error('Error logging donation to Discord:', logError);
         }
@@ -43,12 +46,16 @@ export async function POST(request) {
         if (!strapiResponse.ok) {
             const error = await strapiResponse.json();
             console.error('Error sending donation to Strapi:', error);
-            return NextResponse.error();
         } else {
+            loggedToStrapi = true;
             console.log("Successfully sent donation to Strapi: " + JSON.stringify(donation));
         }
     } catch (error) {
         console.error('Error processing donation:', error);
     }
+    if (!(loggedToDiscord || loggedToStrapi)) {
+        return NextResponse.error();
+    }
+
     return NextResponse.json({ received: true });
 }

@@ -210,13 +210,35 @@ export default function DonationSection(props) {
       tipOrganization: props.global.tipOrganization
     };
     
-    const response = await fetch('/api/register-bank-donation', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(donationData),
-    });
+    try {
+      const response = await fetch('/api/register-bank-donation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(donationData),
+      });
+      
+      // Check if the request was successful
+      if (!response.ok) {
+        showModal({
+          icon: "error",
+          title: props.global.errorText,
+          description: "Nesanāca reģistrēt ziedojumu: " + response.statusText,
+        });
+        return false;
+      }
+      
+      const result = await response.json();
+      return result.received === true;
+    } catch (error) {
+      showModal({
+        icon: "error",
+        title: props.global.errorText,
+        description: error.message,
+      });
+      return false;
+    }
   }
 
   const donateWithCard = async () => {
@@ -551,10 +573,12 @@ export default function DonationSection(props) {
                         text="Ziedot ar bankas pārskaitījumu"
                         type="primary"
                         size="lg"
-                        onClick={() => {
+                        onClick={async () => {
                           GCEvent("donation-clicked");
-                          setStage(4);
-                          donateWithBank();
+                          const success = await donateWithBank();
+                          if (success) {
+                            setStage(4);
+                          }
                         }}
                         disabled={!stageValidity[3]}
                         buttonType="submit"
