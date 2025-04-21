@@ -82,7 +82,7 @@ export default function AmountChooser({
   const amountIsOption = amountOptions.find(
     (amountOption) => amountOption.value === amount,
   );
-  const defaultAmount = amountIsOption ? amount : "other";
+  const defaultAmount = amount ? (amountIsOption ? amount : "other") : null;
   const [selectedAmount, setSelectedAmount] = useState(defaultAmount);
   const otherAmountSelected = selectedAmount === "other";
 
@@ -109,7 +109,7 @@ export default function AmountChooser({
       </RadioGroup>
       {otherAmountSelected && (
         <AmountInput
-          amount={amount}
+          amount={amount ? amount : ""}
           setAmount={setAmount}
           currency={currency}
           label={otherAmountText}

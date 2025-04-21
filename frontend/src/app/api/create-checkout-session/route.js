@@ -41,6 +41,8 @@ export async function POST(request) {
                 lastName: data.lastName,
                 idCode: data.idCode,
                 proportions: JSON.stringify(data.proportions),
+                organizationInfo: data.organizationInfo,
+                donationId: data.id,
                 ...(data.companyName && {
                     companyName: data.companyName,
                     companyCode: data.companyCode,

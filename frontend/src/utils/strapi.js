@@ -66,6 +66,9 @@ export async function getGlobal() {
 
   const response = await fetchAPI(path, urlParamsObject, options);
 
+  if (response == null || response.data == null) {
+    console.error("Missing data.attributes from response: " + JSON.stringify(response));
+  }
   return response.data.attributes;
 }
 
@@ -180,7 +183,7 @@ export function snakeCaseToPascalCase(string) {
     .join("");
 }
 
-export async function getOrganizaitons() {
+export async function getOrganizations() {
   const path = "/organizations";
   const options = headersWithAuthToken();
   const urlParamsObject = {

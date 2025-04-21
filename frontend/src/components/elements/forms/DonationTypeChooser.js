@@ -31,18 +31,20 @@ export default function DonationTypeChooser({
       <fieldset>
         <legend className="sr-only">{label}</legend>
         <div className="flex flex-row gap-6">
+            <Option
+                id="onetime"
+                label={singleDonationText}
+                donationType={donationType}
+                setDonationType={setDonationType}
+            />
+          {/*
+          Enable recurring donations once we have a way to let people cancel them
           <Option
             id="recurring"
             label={recurringDonationText}
             donationType={donationType}
             setDonationType={setDonationType}
-          />
-          <Option
-            id="onetime"
-            label={singleDonationText}
-            donationType={donationType}
-            setDonationType={setDonationType}
-          />
+          />*/}
         </div>
       </fieldset>
     </div>
