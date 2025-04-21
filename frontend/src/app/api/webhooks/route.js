@@ -3,7 +3,6 @@ import Stripe from 'stripe';
 import { headers } from 'next/headers';
 import { makeDonationRequest } from '@/utils/donation';
 import { logDonation } from '@/lib/discordLogger';
-import { fetchAPI } from '@/utils/strapi';
 
 // This webhook gets called by Stripe whenever a payment goes through. Also recurring payments I believe.
 
@@ -75,6 +74,40 @@ export async function POST(request) {
             }
 
             try {
+                // First, log the donation to Discord regardless of Strapi success
+                try {
+                    const { logDonation } = require('@/lib/discordLogger');
+                    
+                    // Parse organization info
+                    const organizations = [];
+                    if (organizationInfo) {
+                        const orgData = JSON.parse(organizationInfo);
+                        Object.values(orgData).forEach(org => {
+                            organizations.push({
+                                name: org.name,
+                                amount: org.amount || 0, // Use the exact amount
+                                percentage: Math.round(org.percentage || 0), // Keep percentage for backwards compatibility
+                                order: org.order // Include order for sorting
+                            });
+                        });
+                    }
+                    
+                    // Log to dedicated Discord channel
+                    await logDonation(
+                        { 
+                            id: donationId || session.id,
+                            amount: donationData.amount + donationData.tipAmount,
+                            tipOrganization: donationData.tipOrganization,
+                        }, 
+                        'stripe', 
+                        session.id,
+                        organizations
+                    );
+                } catch (logError) {
+                    console.error('Error logging donation to Discord:', logError);
+                }
+                
+                // Then try to send the donation to Strapi
                 const response = await makeDonationRequest(donationData);
 
                 if (!response.ok) {
@@ -83,40 +116,7 @@ export async function POST(request) {
                     // We don't throw here as we don't want Stripe to retry the webhook
                     // Just log the error and continue
                 } else {
-                    console.log("Successfully sent donation to Strapi: " + JSON.stringify(donationData));
-                    
-                    // Log donation to Discord
-                    try {
-                        const { logDonation } = require('@/lib/discordLogger');
-                        
-                        // Parse organization info, setting 0 where data is missing to always have it in the message
-                        const organizations = [];
-                        if (organizationInfo) {
-                            const orgData = JSON.parse(organizationInfo);
-                            Object.values(orgData).forEach(org => {
-                                organizations.push({
-                                    name: org.name,
-                                    amount: org.amount || 0, // Use the exact amount
-                                    percentage: Math.round(org.percentage || 0), // Keep percentage for backwards compatibility
-                                    order: org.order // Include order for sorting
-                                });
-                            });
-                        }
-                        
-                        // Log to dedicated Discord channel
-                        await logDonation(
-                            { 
-                                id: donationId || session.id,
-                                amount: donationData.amount + donationData.tipAmount,
-                                tipOrganization: donationData.tipOrganization,
-                            }, 
-                            'stripe', 
-                            session.id,
-                            organizations
-                        );
-                    } catch (logError) {
-                        console.error('Error logging donation to Discord:', logError);
-                    }
+                    console.log("Successfully sent donation to Strapi.");
                 }
             } catch (error) {
                 console.error('Error processing donation:', error);

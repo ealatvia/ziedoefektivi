@@ -9,7 +9,7 @@ export async function POST(request) {
         const donation = JSON.parse(await request.text());
         console.log("Received bank donation intention: " + JSON.stringify(donation));
 
-        // Log donation to Discord
+        // First, always log donation to Discord
         try {
             // Parse organization info
             const organizations = [];
@@ -41,14 +41,18 @@ export async function POST(request) {
             console.error('Error logging donation to Discord:', logError);
         }
 
-        // Log donation to strapi
-        const strapiResponse = await makeDonationRequest(donation);
-        if (!strapiResponse.ok) {
-            const error = await strapiResponse.json();
-            console.error('Error sending donation to Strapi:', error);
-        } else {
-            loggedToStrapi = true;
-            console.log("Successfully sent donation to Strapi: " + JSON.stringify(donation));
+        // Then try to log donation to Strapi
+        try {
+            const strapiResponse = await makeDonationRequest(donation);
+            if (!strapiResponse.ok) {
+                const error = await strapiResponse.json();
+                console.error('Error sending donation to Strapi:', error);
+            } else {
+                loggedToStrapi = true;
+                console.log("Successfully sent donation to Strapi: " + JSON.stringify(donation));
+            }
+        } catch (strapiError) {
+            console.error('Error calling Strapi API:', strapiError);
         }
     } catch (error) {
         console.error('Error processing donation:', error);

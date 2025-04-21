@@ -139,8 +139,12 @@ class DiscordLogger {
       // Add payment method info
       if (paymentMethod === 'stripe' && paymentId) {
         message += ` Stripe payment ID: ${paymentId}`;
+      } else if (paymentMethod === 'stripe (pending)' && paymentId) {
+        message += ` Stripe payment ID: ${paymentId} (pending)`;
       } else if (paymentMethod === 'bank') {
         message += ` (bank transfer)`;
+      } else {
+        message += " " + paymentMethod;
       }
 
       // Send to Discord webhook
