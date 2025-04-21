@@ -28,12 +28,15 @@ export async function POST(request) {
             quantity: 1,
         }];
 
+        // Get the base URL from environment or use the current request origin
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
+        
         // Create the checkout session
         const session = await stripe.checkout.sessions.create({
             line_items: lineItems,
             mode: data.type === 'recurring' ? 'subscription' : 'payment',
-            success_url: data.successUrl,
-            cancel_url: data.cancelUrl,
+            success_url: `${baseUrl}/donation/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${baseUrl}/donation/cancel`,
             customer_email: data.email,
             metadata: {
                 donationType: data.type,
@@ -43,6 +46,10 @@ export async function POST(request) {
                 proportions: JSON.stringify(data.proportions),
                 organizationInfo: data.organizationInfo,
                 donationId: data.id,
+                tipAmount: data.tipAmount?.toString(),
+                tipOrganization: data.tipOrganization,
+                totalAmount: data.totalAmount?.toString(),
+                currency: data.currency || 'eur',
                 ...(data.companyName && {
                     companyName: data.companyName,
                     companyCode: data.companyCode,
