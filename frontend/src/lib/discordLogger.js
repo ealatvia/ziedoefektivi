@@ -167,7 +167,6 @@ export function initLogger() {
   if (!logger && typeof window === 'undefined') {
     // Only initialize on the server side
     logger = new DiscordLogger();
-    console.info('Discord logger initialized');
   }
   return logger;
 }
