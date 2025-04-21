@@ -1,6 +1,6 @@
 import { strapiSectionNameToReactComponentName } from "@/utils/strapi";
 
-export default function Section({ section, global, entity, page} ) {
+export default function Section({ section, global, entity, page }) {
   const componentName = strapiSectionNameToReactComponentName(
     section.__component
   );
