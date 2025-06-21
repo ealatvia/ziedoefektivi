@@ -9,7 +9,7 @@ import Steps from "../elements/forms/Steps";
 import NameInput from "../elements/forms/NameInput";
 import EmailInput from "../elements/forms/EmailInput";
 import IdCodeInput from "../elements/forms/IdCodeInput";
-import { formatEstonianAmount } from "@/utils/estonia";
+import { formatAmount} from "@/utils/local";
 import CheckboxInput from "../elements/forms/CheckboxInput";
 import { makeDonationRequest } from "@/utils/donation";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -21,13 +21,12 @@ import Proportions from "@/utils/proportions";
 import PaymentSummary from "../elements/forms/PaymentSummary";
 import Modal from "../Modal";
 import CompanyInput from "../elements/forms/CompanyInput";
-import { usePlausible } from "next-plausible";
 import DedicationInput from "../elements/forms/DedicationInput";
 import PaymentMethodChooser from "../elements/forms/PaymentMethodChooser";
+import {GCEvent} from "next-goatcounter";
 
 export default function DonationSection(props) {
   const router = useRouter();
-  const plausible = usePlausible();
   const searchParams = useSearchParams();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -78,9 +77,7 @@ export default function DonationSection(props) {
       "company",
       "dedication",
     ]).every(Boolean),
-    2:
-      donation.acceptTerms &&
-      (donation.type === "recurring" ? donation.bank : true),
+    3: donation.acceptTerms,
   };
 
   const [stage, setStage] = useState(0);
@@ -92,7 +89,7 @@ export default function DonationSection(props) {
     : 0;
   const totalAmount = Math.round((donation.amount + tipAmount) * 100) / 100;
 
-  const donate = async () => {
+  const donationData = () => {
     const donationData = pick(donation, [
       "type",
       "firstName",
@@ -104,11 +101,11 @@ export default function DonationSection(props) {
     ]);
     donationData.amounts = [
       ...donation.proportions
-        .calculateAmounts(donation.amount, props.causes)
-        .map(({ organizationId, amount }) => ({
-          organizationId,
-          amount: Math.round(amount * 100),
-        })),
+          .calculateAmounts(donation.amount, props.causes)
+          .map(({ organizationId, amount }) => ({
+            organizationId,
+            amount: Math.round(amount * 100),
+          })),
       {
         organizationId: props.global.tipOrganizationId,
         amount: Math.round(tipAmount * 100),
@@ -124,8 +121,23 @@ export default function DonationSection(props) {
       donationData.dedicationEmail = donation.dedicationEmail;
       donationData.dedicationMessage = donation.dedicationMessage;
     }
+    return donationData;
+  }
 
-    const response = await makeDonationRequest(donationData);
+  const donateWithCard = async () => {
+    try {
+      await initiateStripeCheckout(donationData());
+    } catch (error) {
+      showModal({
+        icon: "error",
+        title: props.global.errorText,
+        description: error.message,
+      });
+    }
+  };
+
+  const donateWithBank = async () => {
+    const response = await makeDonationRequest(donationData());
     const data = await response.json();
 
     if (response.ok) {
@@ -201,7 +213,6 @@ export default function DonationSection(props) {
                 type="primary"
                 size="md"
                 onClick={() => {
-                  plausible("donation-info-stage");
                   setStage(1);
                 }}
                 disabled={!stageValidity[0]}
@@ -292,7 +303,6 @@ export default function DonationSection(props) {
                 type="primary"
                 size="lg"
                 onClick={() => {
-                  plausible("donation-support-stage");
                   setStage(2);
                 }}
                 disabled={!stageValidity[1]}
@@ -323,7 +333,6 @@ export default function DonationSection(props) {
                 type="primary"
                 size="lg"
                 onClick={() => {
-                  plausible("donation-summary-stage");
                   setStage(3);
                 }}
                 buttonType="submit"
@@ -351,45 +360,40 @@ export default function DonationSection(props) {
                 tipAmount={tipAmount}
                 totalAmount={totalAmount}
               />
-              {donation.type === "recurring" && (
-                <BankChooser
-                  bankText={props.bankText}
-                  otherBankText={props.otherBankText}
-                  banks={props.banks}
-                  bank={donation.bank}
-                  setBank={(bank) => setDonation({ ...donation, bank })}
-                />
-              )}
-              {donation.type === "onetime" && (
-                <PaymentMethodChooser
-                  paymentMethod={donation.paymentMethod}
-                  setPaymentMethod={(paymentMethod) =>
-                    setDonation({ ...donation, paymentMethod })
-                  }
-                  label={props.paymentMethodText}
-                  paymentInitiationText={props.paymentInitiationText}
-                  cardPaymentsText={props.cardPaymentsText}
-                />
-              )}
               <CheckboxInput
-                name="terms"
-                label={props.termsText}
-                value={donation.acceptTerms}
-                setValue={(acceptTerms) =>
-                  setDonation({ ...donation, acceptTerms })
-                }
+                  name="terms"
+                  label={props.termsText}
+                  value={donation.acceptTerms}
+                  setValue={(acceptTerms) =>
+                      setDonation({ ...donation, acceptTerms })
+                  }
               />
               <Button
-                text={props.donateButtonText}
-                type="primary"
-                size="lg"
-                onClick={() => {
-                  plausible("donation-clicked");
-                  donate();
-                }}
-                disabled={!stageValidity[2]}
-                buttonType="submit"
-                className="mt-4"
+                  text="Ziedot ar karti"
+                  type="primary"
+                  size="lg"
+                  onClick={() => {
+                    GCEvent("donation-clicked");
+                    donateWithCard();
+                  }}
+                  disabled={!stageValidity[3]}
+                  buttonType="submit"
+                  className="mt-4"
+              />
+              <Button
+                  text="Ziedot ar bankas pārskaitījumu"
+                  type="primary"
+                  size="lg"
+                  onClick={async () => {
+                    GCEvent("donation-clicked");
+                    const success = await donateWithBank();
+                    if (success) {
+                      setStage(4);
+                    }
+                  }}
+                  disabled={!stageValidity[3]}
+                  buttonType="submit"
+                  className="mt-4"
               />
             </form>
           )}
@@ -399,7 +403,7 @@ export default function DonationSection(props) {
         <div className="flex max-w-lg flex-col gap-4 bg-white px-4 py-24 xs:rounded-2xl xs:px-12 xs:py-12 ">
           <Markdown className="prose prose-primary w-full">
             {format(props.recurringDonationGuide, {
-              amount: formatEstonianAmount(totalAmount) + props.global.currency,
+              amount: formatAmount(totalAmount) + props.global.currency,
             })}
           </Markdown>
         </div>
