@@ -1,4 +1,3 @@
-import { amountsFromProportions } from "@/utils/donation";
 import Summary from "../Summary";
 
 export default function PaymentSummary({
@@ -10,11 +9,10 @@ export default function PaymentSummary({
   tipAmount,
   totalAmount,
 }) {
-  const organizationAmounts = amountsFromProportions({
-    proportions: donation.proportions,
-    causes: causes,
-    totalAmount: donation.amount,
-  });
+  const organizationAmounts = donation.proportions.calculateAmounts(
+    donation.amount,
+    causes,
+  );
 
   const tip = {
     title: tipOrganization,
@@ -25,13 +23,17 @@ export default function PaymentSummary({
   const summary = causes.data
     .map((cause) =>
       cause.attributes.organizations.data
-        .filter(
-          (organization) => organizationAmounts[organization.id] !== undefined,
+        .filter((organization) =>
+          organizationAmounts.some(
+            ({ organizationId }) => organizationId === organization.id,
+          ),
         )
         .map((organization) => ({
           title: organization.attributes.title,
           href: `/${cause.attributes.slug}/${organization.attributes.slug}`,
-          amount: organizationAmounts[organization.id],
+          amount: organizationAmounts.find(
+            ({ organizationId }) => organizationId === organization.id,
+          ).amount,
         })),
     )
     .flat()

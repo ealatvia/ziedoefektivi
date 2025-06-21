@@ -1,77 +1,71 @@
 "use strict";
 
 const { createCoreController } = require("@strapi/strapi").factories;
-const { decodePaymentToken } = require("../../../utils/montonio");
+const { decodeOrderToken } = require("../../../utils/montonio");
 
 module.exports = createCoreController(
   "api::donation.donation",
   ({ strapi }) => ({
     async donate(ctx) {
       const donation = ctx.request.body;
-      const validation = await strapi
-        .service("api::donation.donation")
-        .validateDonation(donation);
-
-      if (!validation.valid) {
-        return ctx.badRequest(validation.reason);
-      }
-
-      const donor = await strapi
-        .service("api::donor.donor")
-        .updateOrCreateDonor(donation);
-
-      const tipSize = donation.addTip ? 0.05 : 0;
-      const tipAmount = Math.round(donation.amount * tipSize * 100) / 100;
-      const totalAmount = Math.round((donation.amount + tipAmount) * 100) / 100;
-      const calculations = { tipSize, tipAmount, totalAmount };
-
-      if (donation.type === "recurring") {
-        try {
-          const { redirectURL, recurringDonationId } = await strapi
-            .service("api::donation.donation")
-            .createRecurringDonation({ donation, donor, calculations });
-
-          setTimeout(() => {
-            strapi
-              .service("api::donation.donation")
-              .sendRecurringConfirmationEmail(recurringDonationId);
-          }, 3 * 60 * 1000); // 3 minutes
-
-          return ctx.send({ redirectURL });
-        } catch (error) {
-          console.error(error);
-          return ctx.badRequest("Failed to create recurring donation");
-        }
-      }
 
       try {
         const { redirectURL } = await strapi
           .service("api::donation.donation")
-          .createSingleDonation({ donation, donor, calculations });
+          .createDonation(donation);
         return ctx.send({ redirectURL });
       } catch (error) {
-        console.error(error);
-        return ctx.badRequest("Failed to create single donation" + error.toString());
+        return ctx.badRequest(error.message);
+      }
+    },
+
+    async donateExternal(ctx) {
+      const returnUrl = ctx.request.body.returnUrl;
+      if (!returnUrl) {
+        return ctx.badRequest("No return URL provided");
+      }
+
+      const global = await strapi.db.query("api::global.global").findOne();
+
+      const donation = {
+        ...ctx.request.body,
+        comment: `Return URL: ${returnUrl}`,
+        // External donations always go to the specified organization
+        amounts: [
+          {
+            amount: ctx.request.body.amount,
+            organizationId: global.externalOrganizationId,
+          },
+        ],
+      };
+
+      try {
+        const { redirectURL } = await strapi
+          .service("api::donation.donation")
+          .createDonation(donation, returnUrl, true);
+        return ctx.send({ redirectURL });
+      } catch (error) {
+        return ctx.badRequest(error.message);
       }
     },
 
     async confirm(ctx) {
-      const paymentToken = ctx.request.query.payment_token;
+      const orderToken = ctx.request.query["order-token"];
 
-      if (!paymentToken) {
-        return ctx.badRequest("No payment token provided");
+      if (!orderToken) {
+        return ctx.badRequest("No order token provided");
       }
 
       let decoded;
       try {
-        decoded = decodePaymentToken(paymentToken);
+        decoded = decodeOrderToken(orderToken);
       } catch (error) {
         console.error(error);
         return ctx.badRequest("Invalid payment token");
       }
 
-      if (decoded.status !== "finalized") {
-        return ctx.badRequest("Payment not finalized");
+      if (decoded.paymentStatus !== "PAID") {
+        return ctx.badRequest("Payment not paid");
       }
 
       const id = Number(decoded.merchant_reference.split(" ").at(-1));
@@ -102,7 +96,15 @@ module.exports = createCoreController(
         return ctx.badRequest("Failed to update donation");
       }
 
-      await strapi.service("api::donation.donation").sendConfirmationEmail(id);
+      if (donation.externalDonation) {
+        await strapi
+          .service("api::donation.donation")
+          .sendExternalConfirmationEmail(id);
+      } else {
+        await strapi
+          .service("api::donation.donation")
+          .sendConfirmationEmail(id);
+      }
 
       if (donation.dedicationEmail) {
         await strapi.service("api::donation.donation").sendDedicationEmail(id);
@@ -112,22 +114,22 @@ module.exports = createCoreController(
     },
 
     async decode(ctx) {
-      const paymentToken = ctx.request.query.payment_token;
+      const orderToken = ctx.request.query["order-token"];
 
-      if (!paymentToken) {
+      if (!orderToken) {
         return ctx.badRequest("No payment token provided");
       }
 
       let decoded;
       try {
-        decoded = decodePaymentToken(paymentToken);
+        decoded = decodeOrderToken(orderToken);
       } catch (error) {
         console.error(error);
         return ctx.badRequest("Invalid payment token");
       }
 
-      if (decoded.status !== "finalized") {
-        return { success: false, reason: "Payment not finalized" };
+      if (decoded.paymentStatus !== "PAID") {
+        return ctx.badRequest("Payment not paid");
       }
 
       const id = Number(decoded.merchant_reference.split(" ").at(-1));
@@ -136,7 +138,7 @@ module.exports = createCoreController(
         "api::donation.donation",
         id,
         {
-          fields: ["amount", "tipAmount"],
+          fields: ["amount"],
           populate: [
             "donor",
             "organizationDonations",
@@ -255,6 +257,42 @@ module.exports = createCoreController(
       await strapi.service("api::donation.donation").insertDonation(donation);
 
       return ctx.send();
+    },
+
+    async migrateTips(ctx) {
+      const migratedCount = await strapi
+        .service("api::donation.donation")
+        .migrateTips();
+
+      const migratedRecurringCount = await strapi
+        .service("api::donation.donation")
+        .migrateRecurringTips();
+
+      return ctx.send({ migratedCount, migratedRecurringCount });
+    },
+
+    async addDonationsToTransferByDate(ctx) {
+      const { startDate, endDate, transferId } = ctx.request.body;
+
+      if (!startDate || !endDate || !transferId) {
+        return ctx.badRequest(
+          "Missing required fields (startDate, endDate, transferId)"
+        );
+      }
+
+      const donations = await strapi
+        .service("api::donation.donation")
+        .getDonationsInDateRange(startDate, endDate);
+
+      const donationIds = donations.map((donation) => donation.id);
+
+      await strapi
+        .service("api::donation.donation")
+        .addDonationsToTransfer(donationIds, transferId);
+
+      return ctx.send({
+        message: `Added ${donationIds.length} donations to transfer ${transferId}`,
+      });
     },
   })
 );

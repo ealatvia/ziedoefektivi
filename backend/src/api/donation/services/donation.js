@@ -8,8 +8,8 @@ const {
   validateAmount,
 } = require("../../../utils/donation");
 const { createRecurringPaymentLink } = require("../../../utils/banks");
-const { createPaymentURL } = require("../../../utils/montonio");
-const { formatAmount: formatAmount } = require("../../../utils/local");
+const { fetchRedirectUrl } = require("../../../utils/montonio");
+const { formatEstonianAmount } = require("../../../utils/estonia");
 const {
   format,
   textIntoParagraphs,
@@ -54,7 +54,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       return { valid: false, reason: `Invalid amount: ${donation.amount}` };
     }
 
-    if (donation.amount >= 15000) {
+    if (donation.amount >= 1500000) {
       return { valid: false, reason: "Amount must be smaller than 15000€" };
     }
 
@@ -67,6 +67,17 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
         valid: false,
         reason: `Invalid donation type: ${donation.type}`,
       };
+    }
+
+    if (donation.type === "onetime") {
+      if (
+        !["paymentInitiation", "cardPayments"].includes(donation.paymentMethod)
+      ) {
+        return {
+          valid: false,
+          reason: `Invalid payment method: ${donation.paymentMethod}`,
+        };
+      }
     }
 
     if (donation.companyName || donation.companyCode) {
@@ -96,55 +107,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       }
     }
 
-    const allProportions = [Object.values(donation.proportions)].concat(
-      Object.values(donation.proportions).map(({ proportions }) =>
-        Object.values(proportions)
-      )
-    );
-
-    for (let proportions of allProportions) {
-      const proportionSum = Object.values(proportions).reduce(
-        (acc, { proportion }) => acc + proportion,
-        0
-      );
-      if (proportionSum !== 100) {
-        return {
-          valid: false,
-          reason: `Proportions don't add up to 100: ${proportionSum}`,
-        };
-      }
-    }
-
-    for (let proportions of allProportions) {
-      for (let { proportion } of Object.values(proportions)) {
-        if (
-          !Number.isInteger(proportion) ||
-          proportion < 1 ||
-          proportion > 100
-        ) {
-          return {
-            valid: false,
-            reason: `Proportion must be an integer from 1 to 100: ${proportion}`,
-          };
-        }
-      }
-    }
-
-    const causeIds = Object.keys(donation.proportions);
-    for (let causeId of causeIds) {
-      const cause = await strapi.entityService.findOne(
-        "api::cause.cause",
-        causeId
-      );
-      if (!cause || !cause.active) {
-        return { valid: false, reason: `Not a valid cause: ${causeId}` };
-      }
-    }
-
-    const organizationIds = Object.values(donation.proportions)
-      .map((cause) => Object.keys(cause.proportions))
-      .flat();
-    for (let organizationId of organizationIds) {
+    for (let { organizationId } of donation.amounts) {
       const organization = await strapi.entityService.findOne(
         "api::organization.organization",
         organizationId
@@ -157,37 +120,116 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       }
     }
 
+    const amountSum = donation.amounts.reduce(
+      (acc, { amount }) => acc + amount,
+      0
+    );
+    if (amountSum !== donation.amount) {
+      return {
+        valid: false,
+        reason: "Organization amounts do not add up to the total amount",
+      };
+    }
+
     return { valid: true };
   },
 
-  async createMontonioPayload(donation, donor, { currency = "EUR" } = {}) {
+  async createMontonioPayload(
+    donation,
+    {
+      paymentMethod = "paymentInitiation",
+      currency = "EUR",
+      customReturnUrl,
+      externalDonation = false,
+    } = {}
+  ) {
     const donationInfo = await strapi.db
       .query("api::donation-info.donation-info")
       .findOne();
 
+    const amount = donation.amount / 100;
+
+    const returnUrl = customReturnUrl
+      ? customReturnUrl
+      : `${process.env.FRONTEND_URL}/${donationInfo.returnPath}`;
+
+    const merchantReferencePrefix = externalDonation
+      ? donationInfo.externalMerchantReferencePrefix
+      : donationInfo.merchantReferencePrefix;
+
+    // https://docs.montonio.com/api/stargate/guides/orders#creating-an-order
     const payload = {
-      amount: donation.amount / 100,
+      merchantReference: `${merchantReferencePrefix} ${donation.id}`,
+      returnUrl,
+      notificationUrl: `${process.env.MONTONIO_RETURN_URL}/confirm`,
+      grandTotal: amount,
       currency: currency,
-      merchant_reference: `${donationInfo.merchantReferencePrefix} ${donation.id}`,
-      merchant_return_url: `${process.env.FRONTEND_URL}/${donationInfo.returnPath}`,
-      merchant_notification_url: `${process.env.MONTONIO_RETURN_URL}/confirm`,
-      payment_information_unstructured: donationInfo.transactionComment,
-      checkout_email: donor.email,
-      checkout_first_name: donor.firstName,
-      checkout_last_name: donor.lastName,
+      locale: "et",
+      payment: {
+        amount,
+        currency,
+        method: paymentMethod,
+        methodOptions: {
+          preferredCountry: "EE",
+          preferredLocale: "et",
+        },
+      },
     };
 
     return payload;
   },
 
-  async createSingleDonation({ donation, donor, calculations }) {
+  async createDonation(donation, customReturnUrl, externalDonation) {
+    const validation = await this.validateDonation(donation);
+
+    if (!validation.valid) {
+      throw new Error(validation.reason);
+    }
+
+    const donor = await strapi
+      .service("api::donor.donor")
+      .updateOrCreateDonor(donation);
+
+    if (donation.type === "recurring") {
+      try {
+        const { redirectURL } = await this.createRecurringDonation({
+          donation,
+          donor,
+          externalDonation,
+        });
+
+        return { redirectURL };
+      } catch (error) {
+        console.error(error);
+        throw new Error("Failed to create recurring donation");
+      }
+    }
+
+    try {
+      const { redirectURL } = await this.createSingleDonation({
+        donation,
+        donor,
+        customReturnUrl,
+        externalDonation,
+      });
+      return { redirectURL };
+    } catch (error) {
+      console.error(error);
+      throw new Error("Failed to create single donation");
+    }
+  },
+
+  async createSingleDonation({
+    donation,
+    donor,
+    customReturnUrl,
+    externalDonation,
+  }) {
     const donationEntry = await strapi.entityService.create(
       "api::donation.donation",
       {
         data: {
-          amount: amountToCents(calculations.totalAmount),
-          tipSize: calculations.tipSize,
-          tipAmount: amountToCents(calculations.tipAmount),
+          amount: donation.amount,
           donor: donor.id,
           datetime: new Date(),
           companyName: donation.companyName,
@@ -195,36 +237,41 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
           dedicationName: donation.dedicationName,
           dedicationEmail: donation.dedicationEmail,
           dedicationMessage: donation.dedicationMessage,
+          comment: donation.comment,
+          externalDonation,
         },
       }
     );
 
     await strapi
       .service("api::organization-donation.organization-donation")
-      .createFromProportions({
+      .createOrganizationDonations({
         donationId: donationEntry.id,
-        donationAmount: amountToCents(donation.amount),
-        proportions: donation.proportions,
+        amounts: donation.amounts,
       });
 
-    const payload = await this.createMontonioPayload(donationEntry, donor);
-    const redirectURL = createPaymentURL(payload);
+    const payload = await this.createMontonioPayload(donationEntry, {
+      paymentMethod: donation.paymentMethod,
+      customReturnUrl,
+      externalDonation,
+    });
+    const redirectURL = await fetchRedirectUrl(payload);
+
     return { redirectURL };
   },
 
-  async createRecurringDonation({ donation, donor, calculations }) {
+  async createRecurringDonation({ donation, donor, externalDonation }) {
     const recurringDonationEntry = await strapi.entityService.create(
       "api::recurring-donation.recurring-donation",
       {
         data: {
-          amount: amountToCents(calculations.totalAmount),
-          tipSize: calculations.tipSize,
-          tipAmount: amountToCents(calculations.tipAmount),
+          amount: donation.amount,
           donor: donor.id,
           bank: donation.bank,
           datetime: new Date(),
           companyName: donation.companyName,
           companyCode: donation.companyCode,
+          comment: donation.comment,
         },
       }
     );
@@ -233,15 +280,18 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       .service(
         "api::organization-recurring-donation.organization-recurring-donation"
       )
-      .createFromProportions({
+      .createOrganizationDonations({
         recurringDonationId: recurringDonationEntry.id,
-        recurringDonationAmount: amountToCents(donation.amount),
-        proportions: donation.proportions,
+        amounts: donation.amounts,
       });
 
     const donationInfo = await strapi.db
       .query("api::donation-info.donation-info")
       .findOne();
+
+    const description = externalDonation
+      ? donationInfo.externalRecurringPaymentComment
+      : donationInfo.recurringPaymentComment;
 
     const recurringPaymentLink =
       donation.bank === "other"
@@ -251,15 +301,20 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
             {
               iban: donationInfo.iban,
               recipient: donationInfo.recipient,
-              description: donationInfo.recurringPaymentComment,
+              description,
             },
-            calculations.totalAmount
+            donation.amount / 100
           );
 
-    return {
-      redirectURL: recurringPaymentLink,
-      recurringDonationId: recurringDonationEntry.id,
-    };
+    setTimeout(() => {
+      if (externalDonation) {
+        this.sendExternalRecurringConfirmationEmail(recurringDonationEntry.id);
+      } else {
+        this.sendRecurringConfirmationEmail(recurringDonationEntry.id);
+      }
+    }, 3 * 60 * 1000); // 3 minutes
+
+    return { redirectURL: recurringPaymentLink };
   },
 
   async sendConfirmationEmail(donationId) {
@@ -273,7 +328,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       "api::donation.donation",
       donationId,
       {
-        fields: ["amount", "tipAmount"],
+        fields: ["amount"],
         populate: [
           "donor",
           "organizationDonations",
@@ -293,23 +348,55 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       firstNameHtml: sanitize(donation.donor.firstName),
       lastName: donation.donor.lastName,
       lastNameHtml: sanitize(donation.donor.lastName),
-      amount: formatAmount(donation.amount / 100),
+      amount: formatEstonianAmount(donation.amount / 100),
       currency: global.currency,
     };
 
-    const tip = {
-      organization: { title: global.tipOrganization },
-      amount: donation.tipAmount,
-    };
-
     data.summary = donation.organizationDonations
-      .concat(donation.tipAmount > 0 ? [tip] : [])
       .map((organizationDonation) => {
         const organization = organizationDonation.organization;
-        const amount = formatAmount(organizationDonation.amount / 100);
+        const amount = formatEstonianAmount(organizationDonation.amount / 100);
         return `${organization.title}: ${amount}${global.currency}`;
       })
       .join("\n");
+
+    await strapi.plugins["email"].services.email.sendTemplatedEmail(
+      {
+        to: donation.donor.email,
+        replyTo: emailConfig.confirmationReplyTo,
+      },
+      template,
+      data
+    );
+  },
+
+  async sendExternalConfirmationEmail(donationId) {
+    const emailConfig = await strapi.db
+      .query("api::email-config.email-config")
+      .findOne();
+
+    const global = await strapi.db.query("api::global.global").findOne();
+
+    const donation = await strapi.entityService.findOne(
+      "api::donation.donation",
+      donationId,
+      { populate: ["donor"] }
+    );
+
+    const template = {
+      subject: emailConfig.externalConfirmationSubject,
+      text: emailConfig.externalConfirmationText,
+      html: emailConfig.externalConfirmationHtml,
+    };
+
+    const data = {
+      firstName: donation.donor.firstName,
+      firstNameHtml: sanitize(donation.donor.firstName),
+      lastName: donation.donor.lastName,
+      lastNameHtml: sanitize(donation.donor.lastName),
+      amount: formatEstonianAmount(donation.amount / 100),
+      currency: global.currency,
+    };
 
     await strapi.plugins["email"].services.email.sendTemplatedEmail(
       {
@@ -332,7 +419,6 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       "api::recurring-donation.recurring-donation",
       recurringDonationId,
       {
-        fields: ["amount", "tipAmount"],
         populate: [
           "donor",
           "organizationRecurringDonations",
@@ -352,25 +438,56 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       firstNameHtml: sanitize(recurringDonation.donor.firstName),
       lastName: recurringDonation.donor.lastName,
       lastNameHtml: sanitize(recurringDonation.donor.lastName),
-      amount: formatAmount(recurringDonation.amount / 100),
+      amount: formatEstonianAmount(recurringDonation.amount / 100),
       currency: global.currency,
     };
 
-    const tip = {
-      organization: { title: global.tipOrganization },
-      amount: recurringDonation.tipAmount,
-    };
-
     data.summary = recurringDonation.organizationRecurringDonations
-      .concat(recurringDonation.tipAmount > 0 ? [tip] : [])
       .map((organizationRecurringDonation) => {
         const organization = organizationRecurringDonation.organization;
-        const amount = formatAmount(
+        const amount = formatEstonianAmount(
           organizationRecurringDonation.amount / 100
         );
         return `${organization.title}: ${amount}${global.currency}`;
       })
       .join("\n");
+
+    await strapi.plugins["email"].services.email.sendTemplatedEmail(
+      {
+        to: recurringDonation.donor.email,
+        replyTo: emailConfig.confirmationReplyTo,
+      },
+      template,
+      data
+    );
+  },
+
+  async sendExternalRecurringConfirmationEmail(recurringDonationId) {
+    const emailConfig = await strapi.db
+      .query("api::email-config.email-config")
+      .findOne();
+    const global = await strapi.db.query("api::global.global").findOne();
+
+    const recurringDonation = await strapi.entityService.findOne(
+      "api::recurring-donation.recurring-donation",
+      recurringDonationId,
+      { populate: ["donor"] }
+    );
+
+    const template = {
+      subject: emailConfig.externalRecurringConfirmationSubject,
+      text: emailConfig.externalRecurringConfirmationText,
+      html: emailConfig.externalRecurringConfirmationHtml,
+    };
+
+    const data = {
+      firstName: recurringDonation.donor.firstName,
+      firstNameHtml: sanitize(recurringDonation.donor.firstName),
+      lastName: recurringDonation.donor.lastName,
+      lastNameHtml: sanitize(recurringDonation.donor.lastName),
+      amount: formatEstonianAmount(recurringDonation.amount / 100),
+      currency: global.currency,
+    };
 
     await strapi.plugins["email"].services.email.sendTemplatedEmail(
       {
@@ -395,7 +512,6 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       {
         fields: [
           "amount",
-          "tipAmount",
           "dedicationEmail",
           "dedicationMessage",
           "dedicationName",
@@ -426,7 +542,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     const data = {
       dedicationName: donation.dedicationName,
       donorName: `${donation.donor.firstName} ${donation.donor.lastName}`,
-      amount: formatAmount(donation.amount / 100),
+      amount: formatEstonianAmount(donation.amount / 100),
       currency: global.currency,
       dedicationMessage: `"${donation.dedicationMessage}"`,
     };
@@ -437,16 +553,10 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       sanitize(data.dedicationMessage)
     );
 
-    const tip = {
-      organization: { title: global.tipOrganization },
-      amount: donation.tipAmount,
-    };
-
     data.summary = donation.organizationDonations
-      .concat(donation.tipAmount > 0 ? [tip] : [])
       .map((organizationDonation) => {
         const organization = organizationDonation.organization;
-        const amount = formatAmount(organizationDonation.amount / 100);
+        const amount = formatEstonianAmount(organizationDonation.amount / 100);
         return `${organization.title}: ${amount}${global.currency}`;
       })
       .join("\n");
@@ -469,6 +579,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     organizationRecurringDonations,
     donations,
     organizationDonations,
+    donationTransfers,
   }) {
     const causeMap = {};
     for (let cause of causes) {
@@ -504,8 +615,6 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
         {
           data: {
             amount: recurringDonation.amount,
-            tipSize: recurringDonation.tipSize,
-            tipAmount: recurringDonation.tipAmount,
             donor: donorMap[recurringDonation.donor],
             bank: recurringDonation.bank,
             datetime: recurringDonation.datetime,
@@ -529,7 +638,6 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
             organization:
               organizationMap[organizationRecurringDonation.organization],
             amount: organizationRecurringDonation.amount,
-            proportion: organizationRecurringDonation.proportion,
           },
         }
       );
@@ -542,8 +650,6 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
         {
           data: {
             amount: donation.amount,
-            tipSize: donation.tipSize,
-            tipAmount: donation.tipAmount,
             donor: donorMap[donation.donor],
             datetime: donation.datetime,
             companyName: donation.companyName,
@@ -572,7 +678,22 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
             donation: donationMap[organizationDonation.donation],
             organization: organizationMap[organizationDonation.organization],
             amount: organizationDonation.amount,
-            proportion: organizationDonation.proportion,
+          },
+        }
+      );
+    }
+
+    for (let donationTransfer of donationTransfers) {
+      await strapi.entityService.create(
+        "api::donation-transfer.donation-transfer",
+        {
+          data: {
+            donations: donationTransfer.donations.map(
+              (donationId) => donationMap[donationId]
+            ),
+            datetime: donationTransfer.datetime,
+            recipient: donationTransfer.recipient,
+            notes: donationTransfer.notes,
           },
         }
       );
@@ -628,13 +749,16 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     const donations = (
       await strapi.entityService.findMany("api::donation.donation", {
         sort: "id",
-        populate: ["donor", "recurringDonation"],
+        populate: ["donor", "recurringDonation", "donationTransfer"],
       })
     ).map((donation) => ({
       ...donation,
       donor: donation.donor.id,
       recurringDonation: donation.recurringDonation
         ? donation.recurringDonation.id
+        : null,
+      donationTransfer: donation.donationTransfer
+        ? donation.donationTransfer.id
         : null,
     }));
 
@@ -652,6 +776,19 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       organization: organizationDonation.organization.id,
     }));
 
+    const donationTransfers = (
+      await strapi.entityService.findMany(
+        "api::donation-transfer.donation-transfer",
+        {
+          sort: "id",
+          populate: ["donations"],
+        }
+      )
+    ).map((donationTransfer) => ({
+      ...donationTransfer,
+      donations: donationTransfer.donations.map((donation) => donation.id),
+    }));
+
     return {
       causes,
       organizations,
@@ -660,6 +797,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       organizationRecurringDonations,
       donations,
       organizationDonations,
+      donationTransfers,
     };
   },
 
@@ -720,7 +858,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       {
         filters: {
           donor: donor.id,
-          amount: amount * 100,
+          amount: Math.round(amount * 100),
           datetime: {
             $gte: startDate,
             $lte: endDate,
@@ -741,30 +879,27 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
   },
 
   async insertFromTransaction({ idCode, date, amount, iban }) {
+    if (!validateIdCode(idCode)) {
+      throw new Error(`Invalid ID code: ${idCode}`);
+    }
+
     let donor = await strapi.service("api::donor.donor").findDonor(idCode);
 
     if (!donor) {
       throw new Error(`Donor not found for ID code ${idCode}`);
     }
 
-    const filters = {
-      donor: donor.id,
-    };
-
-    if (idCode.length !== 11) {
-      filters.companyCode = idCode;
-    }
-
     const latestRecurringDonations = await strapi.entityService.findMany(
       "api::recurring-donation.recurring-donation",
       {
-        filters,
+        filters: {
+          donor: donor.id,
+        },
         populate: [
           "organizationRecurringDonations",
           "organizationRecurringDonations.organization",
         ],
         sort: "datetime:desc",
-        limit: 1,
       }
     );
 
@@ -772,12 +907,17 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       throw new Error("No recurring donations found");
     }
 
-    const recurringDonation = latestRecurringDonations[0];
+    // Find the latest recurring donation that is before the date of the transaction
+    // Add 24 hours because the recurring donation includes a time but the bank transaction only includes a date
+    const recurringDonation = latestRecurringDonations.find(
+      (recurringDonation) =>
+        new Date(recurringDonation.datetime).getTime() <=
+        new Date(date).getTime() + 24 * 60 * 60 * 1000
+    );
 
-    const totalAmount = amount * 100;
-    const tipSize = recurringDonation.tipSize;
-    const tipAmount = Math.round(tipSize * totalAmount);
-    const amountWithoutTip = totalAmount - tipAmount;
+    if (!recurringDonation) {
+      throw new Error("No recurring donation found for this date");
+    }
 
     const datetime = new Date(date);
     datetime.setHours(12, 0, 0, 0);
@@ -788,13 +928,11 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
         data: {
           donor: donor.id,
           recurringDonation: recurringDonation.id,
-          amount: totalAmount,
+          amount: Math.round(amount * 100),
           datetime,
           finalized: true,
           companyName: recurringDonation.companyName,
           companyCode: recurringDonation.companyCode,
-          tipSize,
-          tipAmount,
           iban,
           paymentMethod: recurringDonation.bank,
         },
@@ -805,7 +943,8 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       .service("api::organization-donation.organization-donation")
       .createFromOrganizationRecurringDonations({
         donationId: donation.id,
-        donationAmount: amountWithoutTip,
+        donationAmount: Math.round(amount * 100),
+        recurringDonationAmount: recurringDonation.amount,
         organizationRecurringDonations:
           recurringDonation.organizationRecurringDonations,
       });
@@ -828,8 +967,135 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       .service("api::organization-donation.organization-donation")
       .createFromArray({
         donationId: donation.id,
-        donationAmount: donation.amount,
         organizationDonations,
       });
+  },
+
+  /**
+   * Migrate tips from fields in the donation model to OrganizationDonations to
+   * our organization.
+   *
+   * Strapi supports database migrations, but they don't seem to work very well, so
+   * we're doing this through an API endpoint.
+   */
+  async migrateTips() {
+    const donations = await strapi.entityService.findMany(
+      "api::donation.donation",
+      {
+        filters: {
+          tipAmount: { $gt: 0 },
+          finalized: true,
+        },
+        populate: ["donor"],
+      }
+    );
+
+    const global = await strapi.db.query("api::global.global").findOne();
+    const tipOrganizationId = global.tipOrganizationId;
+
+    await Promise.all(
+      donations.map(async (donation) => {
+        await strapi.entityService.create(
+          "api::organization-donation.organization-donation",
+          {
+            data: {
+              donation: donation.id,
+              organization: tipOrganizationId,
+              amount: donation.tipAmount,
+            },
+          }
+        );
+      })
+    );
+
+    await Promise.all(
+      donations.map(async (donation) => {
+        await strapi.entityService.update(
+          "api::donation.donation",
+          donation.id,
+          {
+            data: {
+              tipAmount: null,
+            },
+          }
+        );
+      })
+    );
+
+    return donations.length;
+  },
+
+  async migrateRecurringTips() {
+    const recurringDonations = await strapi.entityService.findMany(
+      "api::recurring-donation.recurring-donation",
+      {
+        filters: {
+          tipAmount: { $gt: 0 },
+        },
+        populate: ["donor"],
+      }
+    );
+
+    const global = await strapi.db.query("api::global.global").findOne();
+    const tipOrganizationId = global.tipOrganizationId;
+
+    await Promise.all(
+      recurringDonations.map(async (recurringDonation) => {
+        await strapi.entityService.create(
+          "api::organization-recurring-donation.organization-recurring-donation",
+          {
+            data: {
+              recurringDonation: recurringDonation.id,
+              organization: tipOrganizationId,
+              amount: recurringDonation.tipAmount,
+            },
+          }
+        );
+      })
+    );
+
+    await Promise.all(
+      recurringDonations.map(async (recurringDonation) => {
+        await strapi.entityService.update(
+          "api::recurring-donation.recurring-donation",
+          recurringDonation.id,
+          {
+            data: {
+              tipAmount: null,
+            },
+          }
+        );
+      })
+    );
+
+    return recurringDonations.length;
+  },
+
+  async getDonationsInDateRange(startDate, endDate) {
+    const donations = await strapi.entityService.findMany(
+      "api::donation.donation",
+      {
+        filters: {
+          datetime: {
+            $gte: startDate,
+            $lte: endDate,
+          },
+          finalized: true,
+        },
+        populate: ["donor"],
+      }
+    );
+
+    return donations;
+  },
+
+  async addDonationsToTransfer(donationIds, transferId) {
+    donationIds.forEach(async (donationId) => {
+      await strapi.entityService.update("api::donation.donation", donationId, {
+        data: {
+          donationTransfer: transferId,
+        },
+      });
+    });
   },
 }));

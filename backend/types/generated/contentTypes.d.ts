@@ -984,8 +984,6 @@ export interface ApiDonationDonation extends Schema.CollectionType {
       'oneToMany',
       'api::organization-donation.organization-donation'
     >;
-    tipSize: Attribute.Float;
-    tipAmount: Attribute.Integer;
     sentToOrganization: Attribute.Boolean & Attribute.DefaultTo<false>;
     dedicationName: Attribute.String &
       Attribute.SetMinMaxLength<{
@@ -999,6 +997,12 @@ export interface ApiDonationDonation extends Schema.CollectionType {
       Attribute.SetMinMaxLength<{
         maxLength: 1024;
       }>;
+    externalDonation: Attribute.Boolean & Attribute.DefaultTo<false>;
+    donationTransfer: Attribute.Relation<
+      'api::donation.donation',
+      'manyToOne',
+      'api::donation-transfer.donation-transfer'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -1029,12 +1033,14 @@ export interface ApiDonationInfoDonationInfo extends Schema.SingleType {
   };
   attributes: {
     returnPath: Attribute.String & Attribute.DefaultTo<'annetatud'>;
-    transactionComment: Attribute.String &
-      Attribute.DefaultTo<'Anneta Targalt annetus'>;
     iban: Attribute.String;
     recipient: Attribute.String;
     recurringPaymentComment: Attribute.String;
     merchantReferencePrefix: Attribute.String;
+    externalRecurringPaymentComment: Attribute.String &
+      Attribute.DefaultTo<'Efektiivne Altruism Eesti p\u00FCsiannetus'>;
+    externalMerchantReferencePrefix: Attribute.String &
+      Attribute.DefaultTo<'Efektiivne Altruism Eesti annetus'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -1045,6 +1051,44 @@ export interface ApiDonationInfoDonationInfo extends Schema.SingleType {
       Attribute.Private;
     updatedBy: Attribute.Relation<
       'api::donation-info.donation-info',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
+export interface ApiDonationTransferDonationTransfer
+  extends Schema.CollectionType {
+  collectionName: 'donation_transfers';
+  info: {
+    singularName: 'donation-transfer';
+    pluralName: 'donation-transfers';
+    displayName: 'DonationTransfer';
+    description: '';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    datetime: Attribute.Date;
+    donations: Attribute.Relation<
+      'api::donation-transfer.donation-transfer',
+      'oneToMany',
+      'api::donation.donation'
+    >;
+    recipient: Attribute.String;
+    notes: Attribute.Text;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::donation-transfer.donation-transfer',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::donation-transfer.donation-transfer',
       'oneToOne',
       'admin::user'
     > &
@@ -1138,6 +1182,12 @@ export interface ApiEmailConfigEmailConfig extends Schema.SingleType {
     recurringConfirmationText: Attribute.Text;
     recurringConfirmationHtml: Attribute.Text;
     recurringConfirmationSubject: Attribute.String;
+    externalConfirmationSubject: Attribute.String;
+    externalConfirmationText: Attribute.Text;
+    externalConfirmationHtml: Attribute.Text;
+    externalRecurringConfirmationText: Attribute.Text;
+    externalRecurringConfirmationHtml: Attribute.Text;
+    externalRecurringConfirmationSubject: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -1188,6 +1238,8 @@ export interface ApiGlobalGlobal extends Schema.SingleType {
     blogSlug: Attribute.String;
     donateText: Attribute.String;
     readMoreText: Attribute.String;
+    tipOrganizationId: Attribute.Integer;
+    externalOrganizationId: Attribute.Integer;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -1281,7 +1333,6 @@ export interface ApiOrganizationDonationOrganizationDonation
       'manyToOne',
       'api::organization.organization'
     >;
-    proportion: Attribute.Float;
     amount: Attribute.Integer;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
@@ -1323,7 +1374,6 @@ export interface ApiOrganizationRecurringDonationOrganizationRecurringDonation
       'manyToOne',
       'api::organization.organization'
     >;
-    proportion: Attribute.Float;
     amount: Attribute.Integer;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
@@ -1412,8 +1462,6 @@ export interface ApiRecurringDonationRecurringDonation
       'oneToMany',
       'api::organization-recurring-donation.organization-recurring-donation'
     >;
-    tipSize: Attribute.Float;
-    tipAmount: Attribute.Integer;
     datetime: Attribute.DateTime;
     donations: Attribute.Relation<
       'api::recurring-donation.recurring-donation',
@@ -1513,6 +1561,7 @@ declare module '@strapi/types' {
       'api::contact-submission.contact-submission': ApiContactSubmissionContactSubmission;
       'api::donation.donation': ApiDonationDonation;
       'api::donation-info.donation-info': ApiDonationInfoDonationInfo;
+      'api::donation-transfer.donation-transfer': ApiDonationTransferDonationTransfer;
       'api::donor.donor': ApiDonorDonor;
       'api::email-config.email-config': ApiEmailConfigEmailConfig;
       'api::global.global': ApiGlobalGlobal;

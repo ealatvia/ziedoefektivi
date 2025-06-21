@@ -232,6 +232,45 @@ export default class Proportions {
     );
   }
 
+  calculateAmounts(totalAmount, causes) {
+    const amounts = [];
+
+    causes.data.forEach((cause) => {
+      const causeProportion = this.getProportion(cause.id);
+      cause.attributes.organizations.data.forEach((organization) => {
+        const organizationProportion = this.getSubProportion(
+          cause.id,
+          organization.id,
+        );
+        const proportion = (causeProportion * organizationProportion) / 10000;
+        const amount = totalAmount * proportion;
+        const roundedAmount = Math.round(amount * 100) / 100;
+        if (roundedAmount > 0) {
+          amounts.push({
+            organizationId: organization.id,
+            amount: roundedAmount,
+          });
+        }
+      });
+    });
+
+    // Avoid rounding errors
+    const total = amounts.reduce((sum, item) => sum + item.amount, 0);
+    if (total !== totalAmount) {
+      const discrepancy = Math.round((totalAmount - total) * 100) / 100;
+      const timesToAdd = Math.floor(Math.abs(discrepancy) / 0.01);
+      const adder = discrepancy / timesToAdd;
+
+      for (let i = 0; i < timesToAdd; i++) {
+        const index = amounts.length - 1 - (i % amounts.length);
+        amounts[index].amount =
+          Math.round((amounts[index].amount + adder) * 100) / 100;
+      }
+    }
+
+    return amounts;
+  }
+
   static fromStrapiDataWithEqualProportions(data) {
     const equalProportions = data.map(
       (_, i) => Math.floor(100 / data.length) + (i < 100 % data.length ? 1 : 0),
