@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { initLogger } from './lib/discordLogger';
+import { initLogger } from './utils/discordLogger';
 
 // Initialize logger once when middleware loads
 if (typeof global.loggerInitialized === 'undefined') {

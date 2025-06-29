@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { logDonation } from '@/lib/discordLogger';
+import { logDonation } from '@/utils/discordLogger';
 
 // Helper function to log to discord when user returns from a successful Stripe checkout page.
 // Because this can be spoofed, we mention this is a pending donation, and wait for Stripe to call our webhook.

@@ -1,56 +1,52 @@
 "use strict";
 
 const { createCoreService } = require("@strapi/strapi").factories;
-const { amountsFromProportions } = require("../../../utils/donation");
+const { resizeOrganizationDonations } = require("../../../utils/donation");
 
 module.exports = createCoreService(
   "api::organization-donation.organization-donation",
   ({ strapi }) => ({
-    async createFromProportions({ donationId, donationAmount, proportions }) {
-      const amountsAndProportions = amountsFromProportions(
-        proportions,
-        donationAmount
-      );
-
-      Promise.all(
-        Object.entries(amountsAndProportions).map(
-          async ([organizationId, amountAndProportion]) => {
-            await strapi.entityService.create(
-              "api::organization-donation.organization-donation",
-              {
-                data: {
-                  donation: donationId,
-                  organization: organizationId,
-                  amount: amountAndProportion.amount,
-                  proportion: amountAndProportion.proportion,
-                },
-              }
-            );
-          }
-        )
+    async createOrganizationDonations({ donationId, amounts }) {
+      return Promise.all(
+        amounts.map(async ({ organizationId, amount }) => {
+          await strapi.entityService.create(
+            "api::organization-donation.organization-donation",
+            {
+              data: {
+                donation: donationId,
+                organization: organizationId,
+                amount,
+              },
+            }
+          );
+        })
       );
     },
 
     async createFromOrganizationRecurringDonations({
       donationId,
       donationAmount,
+      recurringDonationAmount,
       organizationRecurringDonations,
     }) {
-      Promise.all(
-        organizationRecurringDonations.map(
-          async (organizationRecurringDonation) => {
-            const amount = Math.round(
-              donationAmount * organizationRecurringDonation.proportion
-            );
+      const donationMultiplier = donationAmount / recurringDonationAmount;
 
+      const resizedOrganizationDonations = resizeOrganizationDonations(
+        organizationRecurringDonations,
+        donationMultiplier,
+        donationAmount
+      );
+
+      return Promise.all(
+        resizedOrganizationDonations.map(
+          async (organizationRecurringDonation) => {
             await strapi.entityService.create(
               "api::organization-donation.organization-donation",
               {
                 data: {
                   donation: donationId,
                   organization: organizationRecurringDonation.organization.id,
-                  proportion: organizationRecurringDonation.proportion,
-                  amount,
+                  amount: organizationRecurringDonation.amount,
                 },
               }
             );
@@ -59,22 +55,15 @@ module.exports = createCoreService(
       );
     },
 
-    async createFromArray({
-      donationId,
-      donationAmount,
-      organizationDonations,
-    }) {
-      Promise.all(
+    async createFromArray({ donationId, organizationDonations }) {
+      return Promise.all(
         organizationDonations.map(async (organizationDonation) => {
-          const proportion = organizationDonation.amount / donationAmount;
-
           await strapi.entityService.create(
             "api::organization-donation.organization-donation",
             {
               data: {
                 donation: donationId,
                 organization: organizationDonation.organization,
-                proportion,
                 amount: organizationDonation.amount,
               },
             }

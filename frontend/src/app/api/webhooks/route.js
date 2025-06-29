@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { headers } from 'next/headers';
 import { makeDonationRequest } from '@/utils/donation';
-import { logDonation } from '@/lib/discordLogger';
+import { logDonation } from '@/utils/discordLogger';
 
 // This webhook gets called by Stripe whenever a payment goes through. Also recurring payments I believe.
 
@@ -76,7 +76,7 @@ export async function POST(request) {
             try {
                 // First, log the donation to Discord regardless of Strapi success
                 try {
-                    const { logDonation } = require('@/lib/discordLogger');
+                    const { logDonation } = require('@/utils/discordLogger');
                     
                     // Parse organization info
                     const organizations = [];

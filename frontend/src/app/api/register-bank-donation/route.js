@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
 import {makeDonationRequest} from "@/utils/donation";
-import {logDonation} from "@/lib/discordLogger";
+import {logDonation} from "@/utils/discordLogger";
 
 export async function POST(request) {
     let loggedToDiscord = false;
