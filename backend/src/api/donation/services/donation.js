@@ -107,7 +107,14 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       }
     }
 
-    for (let { organizationId } of donation.amounts) {
+    for (let { organizationId, amount } of donation.amounts) {
+      if (amount <= 0) {
+        return {
+          valid: false,
+          reason: `Invalid organization amount: ${amount}`,
+        };
+      }
+
       const organization = await strapi.entityService.findOne(
         "api::organization.organization",
         organizationId
@@ -206,13 +213,13 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     }
 
     try {
-      const { redirectURL } = await this.createSingleDonation({
+      const result = await this.createSingleDonation({
         donation,
         donor,
         customReturnUrl,
         externalDonation,
       });
-      return { redirectURL };
+      return result;
     } catch (error) {
       console.error(error);
       throw new Error("Failed to create single donation");
@@ -250,14 +257,27 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
         amounts: donation.amounts,
       });
 
-    const payload = await this.createMontonioPayload(donationEntry, {
-      paymentMethod: donation.paymentMethod,
-      customReturnUrl,
-      externalDonation,
-    });
-    const redirectURL = await fetchRedirectUrl(payload);
-
-    return { redirectURL };
+    // For Latvian version: return bank transfer info instead of Montonio redirect
+    // Estonian version (upstream) uses Montonio - see original implementation in git history
+    if (donation.paymentMethod === "paymentInitiation") {
+      // Bank transfer - return bank info for frontend display
+      const donationInfo = await strapi.db
+        .query("api::donation-info.donation-info")
+        .findOne();
+      
+      return { 
+        redirectURL: "",
+        bankTransferInfo: {
+          iban: donationInfo.iban,
+          recipient: donationInfo.recipient,
+          reference: `${donationInfo.merchantReferencePrefix} ${donationEntry.id}`,
+          amount: donation.amount / 100
+        }
+      };
+    } else {
+      // Card payments via Stripe - handled by separate webhook, return empty redirect
+      return { redirectURL: "" };
+    }
   },
 
   async createRecurringDonation({ donation, donor, externalDonation }) {
@@ -879,22 +899,24 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
   },
 
   async insertFromTransaction({ idCode, date, amount, iban }) {
-    if (!validateIdCode(idCode)) {
-      throw new Error(`Invalid ID code: ${idCode}`);
-    }
-
     let donor = await strapi.service("api::donor.donor").findDonor(idCode);
 
     if (!donor) {
       throw new Error(`Donor not found for ID code ${idCode}`);
     }
 
+    const filters = {
+      donor: donor.id,
+    };
+
+    if (idCode.length !== 11) {
+      filters.companyCode = idCode;
+    }
+
     const latestRecurringDonations = await strapi.entityService.findMany(
       "api::recurring-donation.recurring-donation",
       {
-        filters: {
-          donor: donor.id,
-        },
+        filters,
         populate: [
           "organizationRecurringDonations",
           "organizationRecurringDonations.organization",

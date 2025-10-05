@@ -49,9 +49,13 @@ export default function Button({
         href={href}
         newTab={newTab}
         className={fullClassName}
-        onClick={() => {
+        onClick={(event) => {
           if (plausibleEvent) {
             GCEvent(plausibleEvent);
+          }
+          if (onClick) {
+            onClick();
+            event.preventDefault();
           }
         }}
         {...rest}

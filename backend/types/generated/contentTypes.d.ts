@@ -1234,7 +1234,7 @@ export interface ApiGlobalGlobal extends Schema.SingleType {
     totalText: Attribute.String;
     currency: Attribute.String & Attribute.DefaultTo<'\u20AC'>;
     tipOrganization: Attribute.String;
-    dateLocale: Attribute.Enumeration<['lv-LV']>;
+    dateLocale: Attribute.Enumeration<['et-EE', 'lv-LV']>;
     blogSlug: Attribute.String;
     donateText: Attribute.String;
     readMoreText: Attribute.String;
