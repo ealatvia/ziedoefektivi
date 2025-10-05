@@ -5,7 +5,7 @@ export default async function manifest() {
 
   const icons = [];
 
-  if (global.chromeIcon192) {
+  if (global?.chromeIcon192) {
     icons.push({
       src: global.chromeIcon192.data.attributes.url,
       sizes: "192x192",
@@ -13,7 +13,7 @@ export default async function manifest() {
     });
   }
 
-  if (global.chromeIcon512) {
+  if (global?.chromeIcon512) {
     icons.push({
       src: global.chromeIcon512.data.attributes.url,
       sizes: "512x512",
@@ -22,9 +22,9 @@ export default async function manifest() {
   }
 
   return {
-    name: global.metadata.title,
-    short_name: global.metadata.title,
-    description: global.metadata.description,
+    name: global?.metadata?.title || "",
+    short_name: global?.metadata?.title || "",
+    description: global?.metadata?.description || "",
     theme_color: "#047857", // primary 700 from tailwind.config.js
     background_color: "#ffffff",
     display: "standalone",
