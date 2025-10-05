@@ -5,7 +5,9 @@ const nextConfig = {
       "res.cloudinary.com", // TODO: remove after clearing data from cloudinary links.
       "splendid-sunshine-fb3754d635.strapiapp.com",
       "splendid-sunshine-fb3754d635.media.strapiapp.com",
-      "placehold.co"
+      "placehold.co",
+      "127.0.0.1",
+      "localhost"
     ],
   },
   async redirects() {

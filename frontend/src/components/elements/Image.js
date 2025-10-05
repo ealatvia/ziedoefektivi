@@ -7,6 +7,12 @@ export default function Image({
   priority = false,
 }) {
   const image = data.data?.attributes;
+  
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `${process.env.NEXT_PUBLIC_STRAPI_API_URL}${url}`;
+  };
 
   if (!image) {
     return (
@@ -23,7 +29,7 @@ export default function Image({
     return (
       <NextImage
         className={className}
-        src={image.url}
+        src={getImageUrl(image.url)}
         alt={image.alternativeText}
         fill={true}
         priority={priority}
@@ -34,7 +40,7 @@ export default function Image({
   return (
     <NextImage
       className={className}
-      src={image.url}
+      src={getImageUrl(image.url)}
       alt={image.alternativeText}
       width={image.width}
       height={image.height}
