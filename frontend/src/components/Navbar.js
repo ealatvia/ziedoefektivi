@@ -29,7 +29,6 @@ export default function Navbar({ global }) {
             {navbar.links.map((link) => (
               <Button key={link.id} type="text" size="lg" {...link} />
             ))}
-            <Button key='calculator' type="text" size="lg" href='/calculator' text='Kalkulators'/>
           </div>
           <div className="">
             <Button {...navbar.ctaButton} />
