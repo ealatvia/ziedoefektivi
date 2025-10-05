@@ -68,6 +68,7 @@ export async function getGlobal() {
 
   if (response == null || response.data == null) {
     console.error("Missing data.attributes from response: " + JSON.stringify(response));
+    return null;
   }
   return response.data.attributes;
 }
