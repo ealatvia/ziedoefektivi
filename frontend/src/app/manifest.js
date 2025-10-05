@@ -5,7 +5,7 @@ export default async function manifest() {
 
   const icons = [];
 
-  if (global?.chromeIcon192) {
+  if (global?.chromeIcon192?.data?.attributes?.url) {
     icons.push({
       src: global.chromeIcon192.data.attributes.url,
       sizes: "192x192",
@@ -13,7 +13,7 @@ export default async function manifest() {
     });
   }
 
-  if (global?.chromeIcon512) {
+  if (global?.chromeIcon512?.data?.attributes?.url) {
     icons.push({
       src: global.chromeIcon512.data.attributes.url,
       sizes: "512x512",
