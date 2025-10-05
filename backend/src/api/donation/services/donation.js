@@ -107,7 +107,14 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       }
     }
 
-    for (let { organizationId } of donation.amounts) {
+    for (let { organizationId, amount } of donation.amounts) {
+      if (amount <= 0) {
+        return {
+          valid: false,
+          reason: `Invalid organization amount: ${amount}`,
+        };
+      }
+
       const organization = await strapi.entityService.findOne(
         "api::organization.organization",
         organizationId
@@ -892,22 +899,24 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
   },
 
   async insertFromTransaction({ idCode, date, amount, iban }) {
-    if (!validateIdCode(idCode)) {
-      throw new Error(`Invalid ID code: ${idCode}`);
-    }
-
     let donor = await strapi.service("api::donor.donor").findDonor(idCode);
 
     if (!donor) {
       throw new Error(`Donor not found for ID code ${idCode}`);
     }
 
+    const filters = {
+      donor: donor.id,
+    };
+
+    if (idCode.length !== 11) {
+      filters.companyCode = idCode;
+    }
+
     const latestRecurringDonations = await strapi.entityService.findMany(
       "api::recurring-donation.recurring-donation",
       {
-        filters: {
-          donor: donor.id,
-        },
+        filters,
         populate: [
           "organizationRecurringDonations",
           "organizationRecurringDonations.organization",
