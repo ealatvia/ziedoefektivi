@@ -23,14 +23,53 @@ Relevant files:
 5. app/api/webhooks/route.js
 
 ## Setup
-TODO
+### Backend
+You will need a specific Node version to run stuff. To do that, install a node version manager, like fnm.
+Also you will need a local postgres instance running. (Don't make it under the backend folder, it will cause refresh hell)
+```bash
+initdb -D local_postgres
+```
+Open local_postgres/postgresql.conf and change the socket location to one you don't need root for.
+`unix_socket_directories = '/tmp' # comma-separated list of directories`
+You can also set the port to avoid needing to specify it.
+`port = 5432`
 
-## Running locally
+Now we can run postgres:
+```bash
+postgres -D local_postgres
+```
+
+And while postgres is running, we can create the database:
+```bash
+createdb annetatargalt -h /tmp
+psql
+create user annetatargalt with encrypted password 'TODO';
+grant all privileges on database annetatargalt to annetatargalt;
+ALTER DATABASE annetatargalt OWNER TO annetatargalt;
+\q
+```
+
+Setup your backend/.env file using the example given.
+Then run backend:
+```bash
+cd backend
+yarn install
+yarn develop
+```
+
+## Running locally (frontend)
+Setup your frontend/.env file using the example; if you go to the Strapi dashboard on prod and create an API key you can actually fetch data
+from it and don't need to run backend.
 ```bash
 cd frontend
 yarn install
 yarn run develop
 ```
+
+# Adding content
+Make sure you create the Global object in Strapi and fill out all the fields, otherwise stuff will break.
+Pages with static content need to be created as a Page object in Strapi. Fill out the fields. And then add a section on that page to display stuff.
+Pages with dynamic content (fetching a specific blog, for example) need to be made as a SpecialPage in Strapi. And the slug pattern should end with a forward slash I guess.
 
 # Old README from the project we copied:
 # Anneta Targalt
