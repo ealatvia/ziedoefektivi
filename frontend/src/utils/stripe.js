@@ -1,4 +1,4 @@
-const initiateStripeCheckout = async (donationData) => {
+export const initiateStripeCheckout = async (donationData) => {
   try {
     const response = await fetch('/api/create-checkout-session', {
       method: 'POST',

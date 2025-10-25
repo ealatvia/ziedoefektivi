@@ -18,7 +18,7 @@ export async function POST(request) {
                     name: data.type === 'recurring' ? 'Monthly Donation' : 'One-time Donation',
                     description: `Donation from ${data.firstName} ${data.lastName}`,
                 },
-                unit_amount: Math.round(data.totalAmount * 100), // Convert to cents
+                unit_amount: data.amount,
                 ...(data.type === 'recurring' && {
                     recurring: {
                         interval: 'month',
@@ -37,19 +37,16 @@ export async function POST(request) {
             mode: data.type === 'recurring' ? 'subscription' : 'payment',
             success_url: `${baseUrl}/donation/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${baseUrl}/donation/cancel`,
-            customer_email: data.email,
+            customer_details: {
+                email: data.email,
+                name: `${data.firstName} ${data.lastName}`,
+            },
             metadata: {
                 donationType: data.type,
                 firstName: data.firstName,
                 lastName: data.lastName,
                 idCode: data.idCode,
-                proportions: JSON.stringify(data.proportions),
-                organizationInfo: data.organizationInfo,
-                donationId: data.id,
-                tipAmount: data.tipAmount?.toString(),
-                tipOrganization: data.tipOrganization,
-                totalAmount: data.totalAmount?.toString(),
-                currency: data.currency || 'eur',
+                amounts: JSON.stringify(data.amounts),
                 ...(data.companyName && {
                     companyName: data.companyName,
                     companyCode: data.companyCode,

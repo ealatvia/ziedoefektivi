@@ -24,6 +24,7 @@ import CompanyInput from "../elements/forms/CompanyInput";
 import DedicationInput from "../elements/forms/DedicationInput";
 import PaymentMethodChooser from "../elements/forms/PaymentMethodChooser";
 import {GCEvent} from "next-goatcounter";
+import {initiateStripeCheckout} from "@/utils/stripe";
 
 export default function DonationSection(props) {
   const router = useRouter();
@@ -126,6 +127,8 @@ export default function DonationSection(props) {
   }
 
   const donateWithCard = async () => {
+    console.log("DONATION DATA: " + JSON.stringify(donationData()));
+    return;
     try {
       await initiateStripeCheckout(donationData());
     } catch (error) {

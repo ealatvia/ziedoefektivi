@@ -29,6 +29,7 @@ export async function POST(request) {
         );
     }
     // Handle the event
+    console.log("STRIPE WEBHOOK " + event.type);
     switch (event.type) {
         case 'checkout.session.completed': {
             const session = event.data.object;
@@ -39,9 +40,7 @@ export async function POST(request) {
                 firstName,
                 lastName,
                 idCode,
-                proportions,
-                organizationInfo,
-                donationId,
+                amounts,
                 companyName,
                 companyCode,
                 dedicationName,
@@ -51,13 +50,14 @@ export async function POST(request) {
 
             // Prepare donation data in the same format as the original request
             const donationData = {
-                amount: session.amount_total / 100, // Convert from cents back to decimal
+                amount: session.amount_total, // Use correct Stripe field
                 type: donationType,
                 firstName,
                 lastName,
-                email: session.customer_email,
+                email: session.customer_details?.email,
                 idCode,
-                proportions: JSON.parse(proportions),
+                amounts: JSON.parse(amounts),
+                paymentMethod: "cardPayments",
                 stripeSessionId: session.id,
             };
 
@@ -77,31 +77,13 @@ export async function POST(request) {
                 // First, log the donation to Discord regardless of Strapi success
                 try {
                     const { logDonation } = require('@/utils/discordLogger');
-                    
-                    // Parse organization info
-                    const organizations = [];
-                    if (organizationInfo) {
-                        const orgData = JSON.parse(organizationInfo);
-                        Object.values(orgData).forEach(org => {
-                            organizations.push({
-                                name: org.name,
-                                amount: org.amount || 0, // Use the exact amount
-                                percentage: Math.round(org.percentage || 0), // Keep percentage for backwards compatibility
-                                order: org.order // Include order for sorting
-                            });
-                        });
-                    }
-                    
                     // Log to dedicated Discord channel
                     await logDonation(
-                        { 
-                            id: donationId || session.id,
-                            amount: donationData.amount + donationData.tipAmount,
-                            tipOrganization: donationData.tipOrganization,
+                        {
+                            amount: donationData.amount / 100, // Convert from cents
                         }, 
                         'stripe', 
                         session.id,
-                        organizations
                     );
                 } catch (logError) {
                     console.error('Error logging donation to Discord:', logError);

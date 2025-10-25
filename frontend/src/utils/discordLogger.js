@@ -102,49 +102,24 @@ class DiscordLogger {
     };
   }
 
-  async logDonation(donation, paymentMethod, paymentId = null, organizations = []) {
+  async logDonation(donation, paymentMethod, paymentId = null) {
     if (!DONATION_WEBHOOK_URL) {
       return;
     }
 
     try {
-      // Format the donation proportions, sorting by order if available
-      let proportionsText = '';
-      if (organizations.length > 0) {
-        // Sort organizations by order if it exists
-        const sortedOrgs = [...organizations].sort((a, b) => {
-          // If order exists, sort by it
-          if (typeof a.order === 'number' && typeof b.order === 'number') {
-            return a.order - b.order;
-          }
-          return 0; // Keep original order if no order field
-        });
-        
-        // Map to strings
-        proportionsText = sortedOrgs.map(org => {
-          // Show amounts instead of percentages
-          const amount = typeof org.amount === 'number' ? org.amount.toFixed(2) : '0.00';
-          // Use the organization name as provided (which is the cause title)
-          return `${org.name}: ${amount}€`;
-        }).join(' ');
-      } else if (donation.proportions) {
-        // Fallback to raw proportions if available
-        proportionsText = JSON.stringify(donation.proportions);
-      }
-      
-      // Build the message - total amount at the beginning
       const amountText = `${donation.amount.toFixed(2)}€`;
-      let message = `${donation.id} ${amountText} ${proportionsText}`;
+      let message = `Donation ${amountText}`;
       
       // Add payment method info
       if (paymentMethod === 'stripe' && paymentId) {
-        message += ` Stripe payment ID: ${paymentId}`;
+        message += ` via Stripe (ID: ${paymentId})`;
       } else if (paymentMethod === 'stripe (pending)' && paymentId) {
-        message += ` Stripe payment ID: ${paymentId} (pending)`;
+        message += ` via Stripe (ID: ${paymentId}, pending)`;
       } else if (paymentMethod === 'bank') {
-        message += ` (bank transfer)`;
+        message += ` via bank transfer`;
       } else {
-        message += " " + paymentMethod;
+        message += ` via ${paymentMethod}`;
       }
 
       // Send to Discord webhook
@@ -181,9 +156,9 @@ export function getLogger() {
 }
 
 // Helper function to log donations
-export async function logDonation(donation, paymentMethod, paymentId = null, organizations = []) {
+export async function logDonation(donation, paymentMethod, paymentId = null) {
   const logger = getLogger();
   if (logger) {
-    await logger.logDonation(donation, paymentMethod, paymentId, organizations);
+    await logger.logDonation(donation, paymentMethod, paymentId);
   }
 }

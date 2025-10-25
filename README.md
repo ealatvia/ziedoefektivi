@@ -66,6 +66,14 @@ yarn install
 yarn run develop
 ```
 
+## Testing webhooks with Stripe locally
+1. Install Stripe CLI. https://docs.stripe.com/stripe-cli/install?install-method=linux
+2. `stripe login`
+3. `stripe listen --forward-to localhost:3000/api/webhooks`
+4. Get your webhook signing secret from the CLI output and add it to your .env:
+STRIPE_WEBHOOK_SECRET=whsec_1234567890abcdef...
+5. `./checkout.sh`
+
 # Adding content
 Make sure you create the Global object in Strapi and fill out all the fields, otherwise stuff will break.
 Pages with static content need to be created as a Page object in Strapi. Fill out the fields. And then add a section on that page to display stuff.
