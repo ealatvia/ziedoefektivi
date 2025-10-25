@@ -4,6 +4,10 @@ module.exports = {
       method: "POST",
       path: "/donate",
       handler: "donation.donate",
+      // TODO: Hack; idk how this works otherwise
+      config: {
+        auth: false,
+      },
     },
     {
       method: "POST",

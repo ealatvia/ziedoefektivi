@@ -121,3 +121,4 @@ build
 
 .next
 frontend/.next
+/local_postgres/
