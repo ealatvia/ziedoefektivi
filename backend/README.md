@@ -64,10 +64,10 @@ yarn develop
 
 5\. Open `127.0.0.1:1337` and create your admin user.
 
-6\. Close Strapi and seed the data if you have it:
+6\. Seed local data by [transferring](https://docs.strapi.io/cms/data-management/transfer) production data:
 
 ```bash
-yarn strapi import -f data.tar.gz
+strapi transfer --from https://splendid-sunshine-fb3754d635.strapiapp.com/admin --from-token $TRANSFER_TOKEN
 ```
 
 Read more about data importing and exporting: https://docs.strapi.io/dev-docs/data-management/import
@@ -85,7 +85,7 @@ Strapi comes with a full featured [Command Line Interface](https://docs.strapi.i
 
 Start your Strapi application with autoReload enabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-develop)
 
-```
+```bash
 npm run develop
 # or
 yarn develop
@@ -95,7 +95,7 @@ yarn develop
 
 Start your Strapi application with autoReload disabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-start)
 
-```
+```bash
 npm run start
 # or
 yarn start
@@ -105,7 +105,7 @@ yarn start
 
 Build your admin panel. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-build)
 
-```
+```bash
 npm run build
 # or
 yarn build
