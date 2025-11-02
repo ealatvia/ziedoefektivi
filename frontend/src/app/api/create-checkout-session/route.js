@@ -30,17 +30,14 @@ export async function POST(request) {
 
         // Get the base URL from environment or use the current request origin
         const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
-        
+
         // Create the checkout session
         const session = await stripe.checkout.sessions.create({
             line_items: lineItems,
             mode: data.type === 'recurring' ? 'subscription' : 'payment',
             success_url: `${baseUrl}/donation/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${baseUrl}/donation/cancel`,
-            customer_details: {
-                email: data.email,
-                name: `${data.firstName} ${data.lastName}`,
-            },
+            customer_email: data.email,
             metadata: {
                 donationType: data.type,
                 firstName: data.firstName,
