@@ -252,6 +252,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
           donor: donor.id,
           datetime: new Date(),
           paymentMethod: donation.paymentMethod,
+          finalized: donation.finalized,
           companyName: donation.companyName,
           companyCode: donation.companyCode,
           dedicationName: donation.dedicationName,

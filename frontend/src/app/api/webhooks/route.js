@@ -59,6 +59,7 @@ export async function POST(request) {
                 amounts: JSON.parse(amounts),
                 paymentMethod: "cardPayments",
                 stripeSessionId: session.id,
+                finalized: true, // Event "checkout.session.completed" implies the payment is finalized.
             };
 
             // Add optional fields if they exist
