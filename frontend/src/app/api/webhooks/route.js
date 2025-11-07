@@ -82,14 +82,14 @@ export async function POST(request) {
                     await logDonation(
                         {
                             amount: donationData.amount / 100, // Convert from cents
-                        }, 
-                        'stripe', 
+                        },
+                        'stripe',
                         session.id,
                     );
                 } catch (logError) {
                     console.error('Error logging donation to Discord:', logError);
                 }
-                
+
                 // Then try to send the donation to Strapi
                 const response = await makeDonationRequest(donationData);
 
