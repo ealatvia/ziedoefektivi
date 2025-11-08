@@ -77,8 +77,6 @@ export async function POST(request) {
             try {
                 // First, log the donation to Discord regardless of Strapi success
                 try {
-                    const { logDonation } = require('@/utils/discordLogger');
-                    // Log to dedicated Discord channel
                     await logDonation(
                         {
                             amount: donationData.amount / 100, // Convert from cents
@@ -107,15 +105,52 @@ export async function POST(request) {
             break;
         }
 
-        case 'payment_intent.payment_failed': {
-            const paymentIntent = event.data.object;
-            console.error('Failed payment for PaymentIntent:', paymentIntent.id);
+        case 'charge.failed': {
+            // TODO: collect emails even if payment failed?
+            // const paymentIntent = event.data.object;
+            // console.error('event.data.object:', JSON.stringify(event.data.object));
             break;
         }
 
-        case 'customer.subscription.deleted': {
-            const subscription = event.data.object;
-            console.error('Subscription cancelled:', subscription.id);
+        case 'charge.dispute.funds_withdrawn': {
+            try {
+                // First, log the donation to Discord regardless of Strapi success
+                try {
+                    await logDonation(
+                        {
+                            amount: event.data.object.amount_total / 100, // Convert from cents
+                        },
+                        'stripe',
+                        event.data.object.id,
+                    );
+                } catch (logError) {
+                    console.error('Error logging donation to Discord:', logError);
+                }
+
+                // Then unconfirm the donation
+                // TODO
+                // const response = await makeDonationRequest(donationData);
+                // if (!response.ok) {
+                //     const error = await response.json();
+                //     console.error('Error updating donation to Strapi:', error);
+                // } else {
+                //     console.log("Successfully updated donation to Strapi.");
+                // }
+            } catch (error) {
+                console.error('Error processing donation:', error);
+            }
+            break;
+        }
+
+        case 'charge.succeeded':
+        case 'charge.updated':
+        case 'payment_intent.succeeded':
+        case 'payment_intent.created':
+        case 'charge.dispute.created':
+        case 'payment_intent.payment_failed':
+        case 'customer.subscription.deleted':
+        default: {
+            console.error('event.data.object:', JSON.stringify(event.data.object));
             break;
         }
     }
