@@ -1003,6 +1003,7 @@ export interface ApiDonationDonation extends Schema.CollectionType {
       'manyToOne',
       'api::donation-transfer.donation-transfer'
     >;
+    stripePaymentIntent: Attribute.String & Attribute.Unique;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<

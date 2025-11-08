@@ -58,7 +58,7 @@ export async function POST(request) {
                 idCode,
                 amounts: JSON.parse(amounts),
                 paymentMethod: "cardPayments",
-                stripeSessionId: session.id,
+                stripePaymentIntent: session.payment_intent,
                 finalized: true, // Event "checkout.session.completed" implies the payment is finalized.
             };
 
@@ -82,7 +82,7 @@ export async function POST(request) {
                             amount: donationData.amount / 100, // Convert from cents
                         },
                         'stripe',
-                        session.id,
+                        session.payment_intent,
                     );
                 } catch (logError) {
                     console.error('Error logging donation to Discord:', logError);
@@ -121,7 +121,7 @@ export async function POST(request) {
                             amount: event.data.object.amount_total / 100, // Convert from cents
                         },
                         'stripe',
-                        event.data.object.id,
+                        event.data.object.payment_intent,
                     );
                 } catch (logError) {
                     console.error('Error logging donation to Discord:', logError);

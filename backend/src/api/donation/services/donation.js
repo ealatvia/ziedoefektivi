@@ -18,7 +18,7 @@ const {
 
 module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
   /**
-   * @param {{amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode: string,amounts: { organizationId: number, amount: number }[],paymentMethod: 'paymentInitiation'|'cardPayments',stripeSessionId?: string}} donation
+   * @param {{amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode: string,amounts: { organizationId: number, amount: number }[],paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntent?: string}} donation
    */
   async validateDonation(donation) {
     if (!donation) {
@@ -190,7 +190,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
   },
 
 /**
- * @param {{amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode: string,amounts: { organizationId: number, amount: number }[],paymentMethod: 'paymentInitiation'|'cardPayments',stripeSessionId?: string}} donation
+ * @param {{amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode: string,amounts: { organizationId: number, amount: number }[],paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntent?: string}} donation
  * @param {*} customReturnUrl
  * @param {*} externalDonation
  * @returns
@@ -236,7 +236,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
   },
 
   /**
-   * @param {{donation: {amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode: string,amounts: { organizationId: number, amount: number }[],paymentMethod: 'paymentInitiation'|'cardPayments',stripeSessionId?: string}, donor: {id: string}, customReturnUrl: string, externalDonation: boolean} donation
+   * @param {{donation: {amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode: string,amounts: { organizationId: number, amount: number }[],paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntent?: string}, donor: {id: string}, customReturnUrl: string, externalDonation: boolean} donation
    */
   async createSingleDonation({
     donation,
@@ -259,6 +259,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
           dedicationEmail: donation.dedicationEmail,
           dedicationMessage: donation.dedicationMessage,
           comment: donation.comment,
+          stripePaymentIntent: donation.stripePaymentIntent,
           externalDonation,
         },
       }
@@ -297,7 +298,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
   },
 
   /**
-   * @param {{donation: {amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode: string,amounts: { organizationId: number, amount: number }[],paymentMethod: 'paymentInitiation'|'cardPayments',stripeSessionId?: string}, donor: {id: string}, externalDonation: boolean} donation
+   * @param {{donation: {amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode: string,amounts: { organizationId: number, amount: number }[],paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntent?: string}, donor: {id: string}, externalDonation: boolean} donation
    */
   async createRecurringDonation({ donation, donor, externalDonation }) {
     const recurringDonationEntry = await strapi.entityService.create(

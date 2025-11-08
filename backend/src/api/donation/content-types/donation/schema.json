@@ -83,6 +83,11 @@
       "relation": "manyToOne",
       "target": "api::donation-transfer.donation-transfer",
       "inversedBy": "donations"
+    },
+    "stripePaymentIntent": {
+      "type": "string",
+      "regex": "pi_(\\w){24}",
+      "unique": true
     }
   }
 }
