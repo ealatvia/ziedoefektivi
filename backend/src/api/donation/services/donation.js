@@ -1013,6 +1013,30 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       });
   },
 
+  async disputeDonation(stripePaymentIntent, disputeId, createdAt) {
+    const [donation] = await strapi.entityService.findMany(
+      "api::donation.donation",
+      { filters: {
+        stripePaymentIntent: stripePaymentIntent
+      }}
+    );
+
+    if (!donation) {
+      return ctx.badRequest("Donation not found");
+    }
+
+    await strapi.entityService.update("api::donation.donation", donation.id, {
+      data: {
+        finalized: false,
+        comment: [donation.comment,
+          `Dispute ID: ${disputeId}`,
+          `Dispute created: ${createdAt.toISOString()}`,
+          `Dispute TODO: please resolve dispute manually. Even if you win, consider this donation never happened and handle recovered funds manually.`
+        ].join('\n')
+      },
+      });
+  },
+
   /**
    * Migrate tips from fields in the donation model to OrganizationDonations to
    * our organization.

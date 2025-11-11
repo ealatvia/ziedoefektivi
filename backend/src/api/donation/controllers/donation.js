@@ -259,6 +259,19 @@ module.exports = createCoreController(
       return ctx.send();
     },
 
+    async disputeDonation(ctx) {
+      try {
+      const body = ctx.request.body;
+        await strapi
+          .service("api::donation.donation")
+          .disputeDonation(body.payment_intent, body.id, new Date(body.created * 1000));
+        return ctx.send();
+      } catch (error) {
+        console.error(error);
+        return ctx.badRequest("Failed to update donation");
+      }
+    },
+
     async migrateTips(ctx) {
       const migratedCount = await strapi
         .service("api::donation.donation")

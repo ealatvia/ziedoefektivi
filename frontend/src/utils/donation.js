@@ -12,3 +12,18 @@ export function makeDonationRequest(donation) {
     body: JSON.stringify(donation),
   });
 }
+
+/**
+ * @param {id: string, created: number, payment_intent: string} disputeFundsWithdrawnEvent
+ */
+export function makeDisputeRequest({id, created, payment_intent}) {
+  return fetch(getStrapiURL("/api/donations/disputeDonation"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      id, created, payment_intent
+    }),
+  });
+}

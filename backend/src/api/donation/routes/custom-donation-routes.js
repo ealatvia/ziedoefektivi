@@ -55,6 +55,15 @@ module.exports = {
       handler: "donation.insertDonation",
     },
     {
+      method: "POST",
+      path: "/donations/disputeDonation",
+      handler: "donation.disputeDonation",
+      // TODO: Hack; idk how this works otherwise
+      config: {
+        auth: false,
+      },
+    },
+    {
       method: "GET",
       path: "/stats",
       handler: "donation.stats",

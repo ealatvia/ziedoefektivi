@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { headers } from 'next/headers';
-import { makeDonationRequest } from '@/utils/donation';
+import { makeDisputeRequest, makeDonationRequest } from '@/utils/donation';
 import { logDonation } from '@/utils/discordLogger';
 
 // This webhook gets called by Stripe whenever a payment goes through. Also recurring payments I believe.
@@ -31,7 +31,7 @@ export async function POST(request) {
     // Handle the event
     console.log("STRIPE WEBHOOK " + event.type);
     switch (event.type) {
-        case 'checkout.session.completed': {
+        case 'checkout.session.completed': { // Both single and first time recurring.
             const session = event.data.object;
 
             // Extract metadata
@@ -128,27 +128,41 @@ export async function POST(request) {
                 }
 
                 // Then unconfirm the donation
-                // TODO
-                // const response = await makeDonationRequest(donationData);
-                // if (!response.ok) {
-                //     const error = await response.json();
-                //     console.error('Error updating donation to Strapi:', error);
-                // } else {
-                //     console.log("Successfully updated donation to Strapi.");
-                // }
+                const response = await makeDisputeRequest(event.data.object);
+                if (!response.ok) {
+                    const error = await response.json();
+                    console.error('Error disputing donation in Strapi:', error);
+                } else {
+                    console.log("Successfully disputed donation in Strapi.");
+                }
             } catch (error) {
                 console.error('Error processing donation:', error);
             }
             break;
         }
 
-        case 'charge.succeeded':
-        case 'charge.updated':
-        case 'payment_intent.succeeded':
-        case 'payment_intent.created':
-        case 'charge.dispute.created':
-        case 'payment_intent.payment_failed':
-        case 'customer.subscription.deleted':
+        case 'invoice.payment_succeeded': {// Recurring only.
+            break;
+        }
+        case 'charge.succeeded': // Both single and recurring
+        case 'charge.updated': // Both single and recurring
+        case 'payment_intent.succeeded': // Both single and recurring
+        case 'payment_intent.created': // Both single and recurring
+        case 'charge.dispute.created': // Both single and recurring
+        case 'payment_intent.payment_failed': // Both single and recurring
+        case 'customer.subscription.deleted': // ?
+        case 'invoice_payment.paid': // Recurring only.
+        case 'invoice.created': // Recurring only.
+        case 'invoice.finalized': // Recurring only.
+        case 'invoice.paid': // Recurring only.
+        case 'invoice.upcoming': // Recurring only (except first time).
+        case 'invoice.updated': // Recurring only.
+        case 'customer.created': // Recurring only (first time only, optional).
+        case 'customer.updated': // Recurring only.
+        case 'customer.subscription.updated': // Recurring only.
+        case 'customer.subscription.created': // Recurring only (first time only).
+        case 'customer.updated': // Recurring only.
+        case 'customer.subscription.updated': // Recurring only.
         default: {
             console.error('event.data.object:', JSON.stringify(event.data.object));
             break;
