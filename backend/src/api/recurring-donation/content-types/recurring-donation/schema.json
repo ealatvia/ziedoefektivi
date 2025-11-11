@@ -50,6 +50,11 @@
       "relation": "manyToOne",
       "target": "api::donor.donor",
       "inversedBy": "recurringDonations"
+    },
+    "stripeSubscriptionId": {
+      "type": "string",
+      "regex": "sub_\\w{24}",
+      "unique": true
     }
   }
 }

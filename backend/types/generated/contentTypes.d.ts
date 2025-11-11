@@ -1474,6 +1474,7 @@ export interface ApiRecurringDonationRecurringDonation
       'manyToOne',
       'api::donor.donor'
     >;
+    stripeSubscriptionId: Attribute.String & Attribute.Unique;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<

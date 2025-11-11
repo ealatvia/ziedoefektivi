@@ -19,6 +19,22 @@ module.exports = createCoreController(
       }
     },
 
+    async donateStripeRecurring(ctx) { // Stripe specific
+    /**
+     * @type {Pick<import("stripe").Stripe.Invoice, 'subscription'|'payment_intent'|'created'|'amount_paid'>}
+     */
+      const { subscription, payment_intent, created, amount_paid } = ctx.request.body;
+
+      await strapi.service("api::donation.donation").createSingleDonationFromRecurringDonation({
+        stripeSubscriptionId: subscription,
+        stripePaymentIntentId: payment_intent,
+        createdAt: created * 1000,
+        amount: amount_paid
+      });
+
+      return ctx.send();
+    },
+
     async donateExternal(ctx) {
       const returnUrl = ctx.request.body.returnUrl;
       if (!returnUrl) {

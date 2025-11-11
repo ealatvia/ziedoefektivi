@@ -14,10 +14,23 @@ export function makeDonationRequest(donation) {
 }
 
 /**
- * @param {id: string, created: number, payment_intent: string} disputeFundsWithdrawnEvent
+ * @param {Pick<import("stripe").Stripe.Invoice, 'subscription'|'payment_intent'|'created'|'amount_paid'>} recurringDonation
+ */
+export function makeStripeRecurringDonationRequest({ subscription, payment_intent, created, amount_paid }) {
+  return fetch(getStrapiURL("/api/donateStripeRecurring"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ subscription, payment_intent, created, amount_paid }),
+  });
+}
+
+/**
+ * @param {Pick<import("stripe").Stripe.Dispute, 'id'|'created'|'payment_intent'} disputeFundsWithdrawnEvent
  */
 export function makeDisputeRequest({id, created, payment_intent}) {
-  return fetch(getStrapiURL("/api/donations/disputeDonation"), {
+  return fetch(getStrapiURL("/api/donations/donateStripeRecurring"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

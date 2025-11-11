@@ -11,6 +11,15 @@ module.exports = {
     },
     {
       method: "POST",
+      path: "/donateStripeRecurring",
+      handler: "donation.donateStripeRecurring",
+      // TODO: Hack; idk how this works otherwise
+      config: {
+        auth: false,
+      },
+    },
+    {
+      method: "POST",
       path: "/donateExternal",
       handler: "donation.donateExternal",
     },

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { headers } from 'next/headers';
-import { makeDisputeRequest, makeDonationRequest } from '@/utils/donation';
+import { makeDisputeRequest, makeDonationRequest, makeStripeRecurringDonationRequest } from '@/utils/donation';
 import { logDonation } from '@/utils/discordLogger';
 
 // This webhook gets called by Stripe whenever a payment goes through. Also recurring payments I believe.
@@ -59,6 +59,7 @@ export async function POST(request) {
                 amounts: JSON.parse(amounts),
                 paymentMethod: "cardPayments",
                 stripePaymentIntentId: session.payment_intent,
+                stripeSubscriptionId: session.subscription,
                 finalized: true, // Event "checkout.session.completed" implies the payment is finalized.
             };
 
@@ -81,7 +82,7 @@ export async function POST(request) {
                         {
                             amount: donationData.amount / 100, // Convert from cents
                         },
-                        'stripe',
+                        'stripe (onetime)',
                         session.payment_intent,
                     );
                 } catch (logError) {
@@ -142,6 +143,30 @@ export async function POST(request) {
         }
 
         case 'invoice.payment_succeeded': {// Recurring only.
+            try {
+                // First, log the donation to Discord regardless of Strapi success
+                try {
+                    await logDonation(
+                        {
+                            amount: event.data.object.amount_total / 100, // Convert from cents
+                        },
+                        'stripe (recurring)',
+                        event.data.object.payment_intent,
+                    );
+                } catch (logError) {
+                    console.error('Error sending recurring donation to Discord:', logError);
+                }
+
+                const response = await makeStripeRecurringDonationRequest(event.data.object);
+                if (!response.ok) {
+                    const error = await response.json();
+                    console.error('Error sending recurring donation in Strapi:', error);
+                } else {
+                    console.log("Successfully sent recurring donation in Strapi.");
+                }
+            } catch (error) {
+                console.error('Error processing recurring donation:', error);
+            }
             break;
         }
         case 'charge.succeeded': // Both single and recurring
