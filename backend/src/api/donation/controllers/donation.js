@@ -261,10 +261,13 @@ module.exports = createCoreController(
 
     async disputeDonation(ctx) {
       try {
-      const body = ctx.request.body;
+        /**
+         * @type {Pick<import("stripe").Stripe.Dispute, 'id'|'created'|'payment_intent'}
+         */
+        const {id, payment_intent, created} = ctx.request.body;
         await strapi
           .service("api::donation.donation")
-          .disputeDonation(body.payment_intent, body.id, new Date(body.created * 1000));
+          .disputeDonation(payment_intent, id, new Date(created * 1000));
         return ctx.send();
       } catch (error) {
         console.error(error);

@@ -84,7 +84,7 @@
       "target": "api::donation-transfer.donation-transfer",
       "inversedBy": "donations"
     },
-    "stripePaymentIntent": {
+    "stripePaymentIntentId": {
       "type": "string",
       "regex": "pi_(\\w){24}",
       "unique": true
