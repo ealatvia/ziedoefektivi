@@ -17,6 +17,9 @@ const {
 } = require("../../../utils/string");
 
 module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
+  /**
+   * @param {{amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode: string,amounts: { organizationId: number, amount: number }[],paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntentId?: string}} donation
+   */
   async validateDonation(donation) {
     if (!donation) {
       return { valid: false, reason: "No donation provided" };
@@ -186,6 +189,12 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     return payload;
   },
 
+/**
+ * @param {{amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode: string,amounts: { organizationId: number, amount: number }[],paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntentId?: string, stripeSubscriptionId?: string}} donation
+ * @param {*} customReturnUrl
+ * @param {*} externalDonation
+ * @returns
+ */
   async createDonation(donation, customReturnUrl, externalDonation) {
     const validation = await this.validateDonation(donation);
 
@@ -226,6 +235,9 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     }
   },
 
+  /**
+   * @param {{donation: {amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode: string,amounts: { organizationId: number, amount: number }[],paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntentId?: string}, donor: {id: string}, customReturnUrl: string, externalDonation: boolean} donation
+   */
   async createSingleDonation({
     donation,
     donor,
@@ -239,12 +251,15 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
           amount: donation.amount,
           donor: donor.id,
           datetime: new Date(),
+          paymentMethod: donation.paymentMethod,
+          finalized: donation.finalized,
           companyName: donation.companyName,
           companyCode: donation.companyCode,
           dedicationName: donation.dedicationName,
           dedicationEmail: donation.dedicationEmail,
           dedicationMessage: donation.dedicationMessage,
           comment: donation.comment,
+          stripePaymentIntentId: donation.stripePaymentIntentId,
           externalDonation,
         },
       }
@@ -264,8 +279,8 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       const donationInfo = await strapi.db
         .query("api::donation-info.donation-info")
         .findOne();
-      
-      return { 
+
+      return {
         redirectURL: "",
         bankTransferInfo: {
           iban: donationInfo.iban,
@@ -274,67 +289,168 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
           amount: donation.amount / 100
         }
       };
-    } else {
-      // Card payments via Stripe - handled by separate webhook, return empty redirect
+    }
+
+    // Card payments via Stripe - handled by separate webhook, return empty redirect
+    if (donation.paymentMethod === "cardPayments") {
       return { redirectURL: "" };
     }
   },
 
+  /**
+   * @param {{donation: {amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode: string,amounts: { organizationId: number, amount: number }[],paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntentId?: string,stripeSubscriptionId?:string}, donor: {id: string}, externalDonation: boolean} donation
+   */
   async createRecurringDonation({ donation, donor, externalDonation }) {
-    const recurringDonationEntry = await strapi.entityService.create(
+    // Recurring card payments via Stripe - already created in Stripe as part of initial payment.
+    if (donation.paymentMethod === "cardPayments") {
+      const recurringDonationEntry = await strapi.entityService.create(
+        "api::recurring-donation.recurring-donation",
+        {
+          data: {
+            active: true,
+            amount: donation.amount,
+            donor: donor.id,
+            bank: 'cardPayments',
+            datetime: new Date(),
+            companyName: donation.companyName,
+            companyCode: donation.companyCode,
+            comment: donation.comment,
+            stripeSubscriptionId: donation.stripeSubscriptionId,
+          },
+        }
+      );
+
+      await strapi
+        .service("api::organization-recurring-donation.organization-recurring-donation")
+        .createOrganizationDonations({
+          recurringDonationId: recurringDonationEntry.id,
+          amounts: donation.amounts,
+        });
+
+      return { redirectURL: "" };
+    }
+
+    // For Latvian version: return bank transfer info instead of Montonio redirect
+    // Estonian version (upstream) uses Montonio - see original implementation in git history
+    if (donation.paymentMethod === "paymentInitiation") {
+      const recurringDonationEntry = await strapi.entityService.create(
+        "api::recurring-donation.recurring-donation",
+        {
+          data: {
+            amount: donation.amount,
+            donor: donor.id,
+            bank: donation.bank,
+            datetime: new Date(),
+            companyName: donation.companyName,
+            companyCode: donation.companyCode,
+            comment: donation.comment,
+          },
+        }
+      );
+
+      await strapi
+        .service("api::organization-recurring-donation.organization-recurring-donation")
+        .createOrganizationDonations({
+          recurringDonationId: recurringDonationEntry.id,
+          amounts: donation.amounts,
+        });
+
+      const donationInfo = await strapi.db
+        .query("api::donation-info.donation-info")
+        .findOne();
+
+      const description = externalDonation
+        ? donationInfo.externalRecurringPaymentComment
+        : donationInfo.recurringPaymentComment;
+
+      const recurringPaymentLink =
+        donation.bank === "other"
+          ? ""
+          : createRecurringPaymentLink(
+              donation.bank,
+              {
+                iban: donationInfo.iban,
+                recipient: donationInfo.recipient,
+                description,
+              },
+              donation.amount / 100
+            );
+
+      setTimeout(() => {
+        if (externalDonation) {
+          this.sendExternalRecurringConfirmationEmail(recurringDonationEntry.id);
+        } else {
+          this.sendRecurringConfirmationEmail(recurringDonationEntry.id);
+        }
+      }, 3 * 60 * 1000); // 3 minutes
+
+      return { redirectURL: recurringPaymentLink };
+    }
+  },
+
+  async createSingleDonationFromRecurringDonation({ stripeSubscriptionId, stripePaymentIntentId, createdAt, amount }) {
+    const latestRecurringDonations = await strapi.entityService.findMany(
       "api::recurring-donation.recurring-donation",
       {
+        filters: {
+          stripeSubscriptionId: stripeSubscriptionId,
+        },
+        populate: [
+          "donor",
+          "organizationRecurringDonations",
+          "organizationRecurringDonations.organization",
+        ],
+        sort: "datetime:desc",
+      }
+    );
+
+    if (latestRecurringDonations.length === 0) {
+      throw new Error("No recurring donations found");
+    }
+
+    // Find the latest recurring donation that is before the date of the transaction
+    // Add 24 hours because the recurring donation includes a time but the bank transaction only includes a date
+    const recurringDonation = latestRecurringDonations.find(
+      (recurringDonation) =>
+        new Date(recurringDonation.datetime).getTime() <=
+        new Date(createdAt).getTime() + 24 * 60 * 60 * 1000
+    );
+
+    if (!recurringDonation) {
+      throw new Error("No recurring donation found for this date");
+    }
+
+    const datetime = new Date(createdAt);
+    datetime.setHours(12, 0, 0, 0);
+
+    const donation = await strapi.entityService.create(
+      "api::donation.donation",
+      {
         data: {
-          amount: donation.amount,
-          donor: donor.id,
-          bank: donation.bank,
-          datetime: new Date(),
-          companyName: donation.companyName,
-          companyCode: donation.companyCode,
-          comment: donation.comment,
+          donor: recurringDonation.donor.id,
+          recurringDonation: recurringDonation.id,
+          amount: amount,
+          datetime,
+          finalized: true,
+          companyName: recurringDonation.companyName,
+          companyCode: recurringDonation.companyCode,
+          paymentMethod: recurringDonation.bank,
+          stripePaymentIntentId: stripePaymentIntentId,
         },
       }
     );
 
     await strapi
-      .service(
-        "api::organization-recurring-donation.organization-recurring-donation"
-      )
-      .createOrganizationDonations({
-        recurringDonationId: recurringDonationEntry.id,
-        amounts: donation.amounts,
+      .service("api::organization-donation.organization-donation")
+      .createFromOrganizationRecurringDonations({
+        donationId: donation.id,
+        donationAmount: amount,
+        recurringDonationAmount: recurringDonation.amount,
+        organizationRecurringDonations:
+          recurringDonation.organizationRecurringDonations,
       });
 
-    const donationInfo = await strapi.db
-      .query("api::donation-info.donation-info")
-      .findOne();
-
-    const description = externalDonation
-      ? donationInfo.externalRecurringPaymentComment
-      : donationInfo.recurringPaymentComment;
-
-    const recurringPaymentLink =
-      donation.bank === "other"
-        ? ""
-        : createRecurringPaymentLink(
-            donation.bank,
-            {
-              iban: donationInfo.iban,
-              recipient: donationInfo.recipient,
-              description,
-            },
-            donation.amount / 100
-          );
-
-    setTimeout(() => {
-      if (externalDonation) {
-        this.sendExternalRecurringConfirmationEmail(recurringDonationEntry.id);
-      } else {
-        this.sendRecurringConfirmationEmail(recurringDonationEntry.id);
-      }
-    }, 3 * 60 * 1000); // 3 minutes
-
-    return { redirectURL: recurringPaymentLink };
+    // TODO: send confirmation email with invoice link.
   },
 
   async sendConfirmationEmail(donationId) {
@@ -991,6 +1107,30 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
         donationId: donation.id,
         organizationDonations,
       });
+  },
+
+  async disputeDonation(stripePaymentIntentId, disputeId, createdAt) {
+    const [donation] = await strapi.entityService.findMany(
+      "api::donation.donation",
+      { filters: {
+        stripePaymentIntentId: stripePaymentIntentId
+      }}
+    );
+
+    if (!donation) {
+      return ctx.badRequest("Donation not found");
+    }
+
+    await strapi.entityService.update("api::donation.donation", donation.id, {
+      data: {
+        finalized: false,
+        comment: [donation.comment,
+          `Dispute ID: ${disputeId}`,
+          `Dispute created: ${createdAt.toISOString()}`,
+          `Dispute TODO: please resolve dispute manually. Even if you win, consider this donation never happened and handle recovered funds manually.`
+        ].join('\n')
+      },
+    });
   },
 
   /**

@@ -1003,6 +1003,7 @@ export interface ApiDonationDonation extends Schema.CollectionType {
       'manyToOne',
       'api::donation-transfer.donation-transfer'
     >;
+    stripePaymentIntentId: Attribute.String & Attribute.Unique;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
@@ -1473,6 +1474,7 @@ export interface ApiRecurringDonationRecurringDonation
       'manyToOne',
       'api::donor.donor'
     >;
+    stripeSubscriptionId: Attribute.String & Attribute.Unique;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<

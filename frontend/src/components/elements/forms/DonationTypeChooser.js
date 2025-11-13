@@ -37,14 +37,12 @@ export default function DonationTypeChooser({
                 donationType={donationType}
                 setDonationType={setDonationType}
             />
-          {/*
-          Enable recurring donations once we have a way to let people cancel them
           <Option
             id="recurring"
             label={recurringDonationText}
             donationType={donationType}
             setDonationType={setDonationType}
-          />*/}
+          />
         </div>
       </fieldset>
     </div>

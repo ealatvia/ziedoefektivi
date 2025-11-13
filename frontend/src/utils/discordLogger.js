@@ -110,7 +110,43 @@ class DiscordLogger {
     try {
       const amountText = `${donation.amount.toFixed(2)}€`;
       let message = `Donation ${amountText}`;
-      
+
+      // Add payment method info
+      if (paymentMethod === 'stripe' && paymentId) {
+        message += ` via Stripe (ID: ${paymentId})`;
+      } else if (paymentMethod === 'stripe (pending)' && paymentId) {
+        message += ` via Stripe (ID: ${paymentId}, pending)`;
+      } else if (paymentMethod === 'bank') {
+        message += ` via bank transfer`;
+      } else {
+        message += ` via ${paymentMethod}`;
+      }
+
+      // Send to Discord webhook
+      await fetch(DONATION_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: message
+        }),
+      });
+    } catch (error) {
+      // Use original console to avoid infinite loops
+      this.originalConsole.error('Failed to send donation log to Discord:', error);
+    }
+  }
+
+  async logStripeChargeback(donation, paymentMethod, paymentId = null) {
+    if (!DONATION_WEBHOOK_URL) {
+      return;
+    }
+
+    try {
+      const amountText = `${donation.amount.toFixed(2)}€`;
+      let message = `Chargeback ${amountText}`;
+
       // Add payment method info
       if (paymentMethod === 'stripe' && paymentId) {
         message += ` via Stripe (ID: ${paymentId})`;

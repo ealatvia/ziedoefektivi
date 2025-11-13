@@ -19,6 +19,22 @@ module.exports = createCoreController(
       }
     },
 
+    async donateStripeRecurring(ctx) { // Stripe specific
+    /**
+     * @type {Pick<import("stripe").Stripe.Invoice, 'subscription'|'payment_intent'|'created'|'amount_paid'>}
+     */
+      const { subscription, payment_intent, created, amount_paid } = ctx.request.body;
+
+      await strapi.service("api::donation.donation").createSingleDonationFromRecurringDonation({
+        stripeSubscriptionId: subscription,
+        stripePaymentIntentId: payment_intent,
+        createdAt: created * 1000,
+        amount: amount_paid
+      });
+
+      return ctx.send();
+    },
+
     async donateExternal(ctx) {
       const returnUrl = ctx.request.body.returnUrl;
       if (!returnUrl) {
@@ -257,6 +273,22 @@ module.exports = createCoreController(
       await strapi.service("api::donation.donation").insertDonation(donation);
 
       return ctx.send();
+    },
+
+    async disputeDonation(ctx) {
+      try {
+        /**
+         * @type {Pick<import("stripe").Stripe.Dispute, 'id'|'created'|'payment_intent'}
+         */
+        const {id, payment_intent, created} = ctx.request.body;
+        await strapi
+          .service("api::donation.donation")
+          .disputeDonation(payment_intent, id, new Date(created * 1000));
+        return ctx.send();
+      } catch (error) {
+        console.error(error);
+        return ctx.badRequest("Failed to update donation");
+      }
     },
 
     async migrateTips(ctx) {

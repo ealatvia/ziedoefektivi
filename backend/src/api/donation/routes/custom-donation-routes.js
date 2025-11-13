@@ -11,6 +11,15 @@ module.exports = {
     },
     {
       method: "POST",
+      path: "/donateStripeRecurring",
+      handler: "donation.donateStripeRecurring",
+      // TODO: Hack; idk how this works otherwise
+      config: {
+        auth: false,
+      },
+    },
+    {
+      method: "POST",
       path: "/donateExternal",
       handler: "donation.donateExternal",
     },
@@ -53,6 +62,15 @@ module.exports = {
       method: "POST",
       path: "/donations/insertDonation",
       handler: "donation.insertDonation",
+    },
+    {
+      method: "POST",
+      path: "/donations/disputeDonation",
+      handler: "donation.disputeDonation",
+      // TODO: Hack; idk how this works otherwise
+      config: {
+        auth: false,
+      },
     },
     {
       method: "GET",

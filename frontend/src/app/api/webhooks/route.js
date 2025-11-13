@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { headers } from 'next/headers';
-import { makeDonationRequest } from '@/utils/donation';
+import { makeDisputeRequest, makeDonationRequest, makeStripeRecurringDonationRequest } from '@/utils/donation';
 import { logDonation } from '@/utils/discordLogger';
 
 // This webhook gets called by Stripe whenever a payment goes through. Also recurring payments I believe.
@@ -31,7 +31,7 @@ export async function POST(request) {
     // Handle the event
     console.log("STRIPE WEBHOOK " + event.type);
     switch (event.type) {
-        case 'checkout.session.completed': {
+        case 'checkout.session.completed': { // Both single and first time recurring.
             const session = event.data.object;
 
             // Extract metadata
@@ -58,7 +58,9 @@ export async function POST(request) {
                 idCode,
                 amounts: JSON.parse(amounts),
                 paymentMethod: "cardPayments",
-                stripeSessionId: session.id,
+                stripePaymentIntentId: session.payment_intent,
+                stripeSubscriptionId: session.subscription,
+                finalized: true, // Event "checkout.session.completed" implies the payment is finalized.
             };
 
             // Add optional fields if they exist
@@ -76,19 +78,17 @@ export async function POST(request) {
             try {
                 // First, log the donation to Discord regardless of Strapi success
                 try {
-                    const { logDonation } = require('@/utils/discordLogger');
-                    // Log to dedicated Discord channel
                     await logDonation(
                         {
                             amount: donationData.amount / 100, // Convert from cents
-                        }, 
-                        'stripe', 
-                        session.id,
+                        },
+                        'stripe (onetime)',
+                        session.payment_intent,
                     );
                 } catch (logError) {
                     console.error('Error logging donation to Discord:', logError);
                 }
-                
+
                 // Then try to send the donation to Strapi
                 const response = await makeDonationRequest(donationData);
 
@@ -106,15 +106,90 @@ export async function POST(request) {
             break;
         }
 
-        case 'payment_intent.payment_failed': {
-            const paymentIntent = event.data.object;
-            console.error('Failed payment for PaymentIntent:', paymentIntent.id);
+        case 'charge.failed': {
+            // TODO: collect emails even if payment failed?
+            // const paymentIntent = event.data.object;
+            // console.error('event.data.object:', JSON.stringify(event.data.object));
             break;
         }
 
-        case 'customer.subscription.deleted': {
-            const subscription = event.data.object;
-            console.error('Subscription cancelled:', subscription.id);
+        case 'charge.dispute.funds_withdrawn': {
+            try {
+                // First, log the donation to Discord regardless of Strapi success
+                try {
+                    await logDonation(
+                        {
+                            amount: event.data.object.amount_total / 100, // Convert from cents
+                        },
+                        'stripe',
+                        event.data.object.payment_intent,
+                    );
+                } catch (logError) {
+                    console.error('Error logging donation to Discord:', logError);
+                }
+
+                // Then unconfirm the donation
+                const response = await makeDisputeRequest(event.data.object);
+                if (!response.ok) {
+                    const error = await response.json();
+                    console.error('Error disputing donation in Strapi:', error);
+                } else {
+                    console.log("Successfully disputed donation in Strapi.");
+                }
+            } catch (error) {
+                console.error('Error processing donation:', error);
+            }
+            break;
+        }
+
+        case 'invoice.payment_succeeded': {// Recurring only.
+            try {
+                // First, log the donation to Discord regardless of Strapi success
+                try {
+                    await logDonation(
+                        {
+                            amount: event.data.object.amount_total / 100, // Convert from cents
+                        },
+                        'stripe (recurring)',
+                        event.data.object.payment_intent,
+                    );
+                } catch (logError) {
+                    console.error('Error sending recurring donation to Discord:', logError);
+                }
+
+                const response = await makeStripeRecurringDonationRequest(event.data.object);
+                if (!response.ok) {
+                    const error = await response.json();
+                    console.error('Error sending recurring donation in Strapi:', error);
+                } else {
+                    console.log("Successfully sent recurring donation in Strapi.");
+                }
+            } catch (error) {
+                console.error('Error processing recurring donation:', error);
+            }
+            break;
+        }
+        case 'charge.succeeded': // Both single and recurring
+        case 'charge.updated': // Both single and recurring
+        case 'payment_intent.succeeded': // Both single and recurring
+        case 'payment_intent.created': // Both single and recurring
+        case 'charge.dispute.created': // Both single and recurring
+        case 'payment_intent.payment_failed': // Both single and recurring
+        case 'customer.subscription.deleted': // ?
+        case 'invoice_payment.paid': // Recurring only.
+        case 'invoice.created': // Recurring only.
+        case 'invoice.finalized': // Recurring only.
+        case 'invoice.paid': // Recurring only.
+        case 'invoice.upcoming': // Recurring only (except first time).
+        case 'invoice.updated': // Recurring only.
+        case 'customer.created': // Recurring only (first time only, optional).
+        case 'customer.updated': // Recurring only.
+        case 'customer.subscription.updated': // Recurring only.
+        case 'customer.subscription.created': // Recurring only (first time only).
+        case 'customer.updated': // Recurring only.
+        case 'customer.subscription.updated': // Recurring only.
+        default: {
+            console.error('event.data.object:', JSON.stringify(event.data.object));
             break;
         }
     }

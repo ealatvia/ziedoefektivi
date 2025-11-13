@@ -128,7 +128,7 @@ export default function DonationSection(props) {
 
   const donateWithCard = async () => {
     console.log("DONATION DATA: " + JSON.stringify(donationData()));
-    return;
+    // return;
     try {
       await initiateStripeCheckout(donationData());
     } catch (error) {
