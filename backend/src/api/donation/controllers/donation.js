@@ -32,7 +32,7 @@ module.exports = createCoreController(
         amount: amount_paid
       });
 
-      return ctx.send();
+      return ctx.send({});
     },
 
     async donateExternal(ctx) {

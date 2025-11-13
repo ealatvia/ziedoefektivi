@@ -11,7 +11,6 @@ import EmailInput from "../elements/forms/EmailInput";
 import IdCodeInput from "../elements/forms/IdCodeInput";
 import { formatAmount} from "@/utils/local";
 import CheckboxInput from "../elements/forms/CheckboxInput";
-import { makeDonationRequest } from "@/utils/donation";
 import { useRouter, useSearchParams } from "next/navigation";
 import BankChooser from "../elements/forms/BankChooser";
 import Markdown from "../elements/Markdown";
@@ -25,6 +24,7 @@ import DedicationInput from "../elements/forms/DedicationInput";
 import PaymentMethodChooser from "../elements/forms/PaymentMethodChooser";
 import {GCEvent} from "next-goatcounter";
 import {initiateStripeCheckout} from "@/utils/stripe";
+import { makeDonationRequest } from "@/utils/strapi";
 
 export default function DonationSection(props) {
   const router = useRouter();

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { headers } from 'next/headers';
-import { makeDisputeRequest, makeDonationRequest, makeStripeRecurringDonationRequest } from '@/utils/donation';
+import { makeDisputeRequest, makeDonationRequest, makeStripeRecurringDonationRequest } from '@/utils/strapi';
 import { logDonation } from '@/utils/discordLogger';
 
 // This webhook gets called by Stripe whenever a payment goes through. Also recurring payments I believe.
@@ -89,17 +89,9 @@ export async function POST(request) {
                     console.error('Error logging donation to Discord:', logError);
                 }
 
-                // Then try to send the donation to Strapi
-                const response = await makeDonationRequest(donationData);
+                await makeDonationRequest(donationData);
+                console.log("Successfully sent donation to Strapi.");
 
-                if (!response.ok) {
-                    const error = await response.json();
-                    console.error('Error sending donation to Strapi:', error);
-                    // We don't throw here as we don't want Stripe to retry the webhook
-                    // Just log the error and continue
-                } else {
-                    console.log("Successfully sent donation to Strapi.");
-                }
             } catch (error) {
                 console.error('Error processing donation:', error);
             }
@@ -128,14 +120,9 @@ export async function POST(request) {
                     console.error('Error logging donation to Discord:', logError);
                 }
 
-                // Then unconfirm the donation
-                const response = await makeDisputeRequest(event.data.object);
-                if (!response.ok) {
-                    const error = await response.json();
-                    console.error('Error disputing donation in Strapi:', error);
-                } else {
-                    console.log("Successfully disputed donation in Strapi.");
-                }
+                await makeDisputeRequest(event.data.object);
+                console.log("Successfully disputed donation in Strapi.");
+
             } catch (error) {
                 console.error('Error processing donation:', error);
             }
@@ -157,13 +144,9 @@ export async function POST(request) {
                     console.error('Error sending recurring donation to Discord:', logError);
                 }
 
-                const response = await makeStripeRecurringDonationRequest(event.data.object);
-                if (!response.ok) {
-                    const error = await response.json();
-                    console.error('Error sending recurring donation in Strapi:', error);
-                } else {
-                    console.log("Successfully sent recurring donation in Strapi.");
-                }
+                await makeStripeRecurringDonationRequest(event.data.object);
+                console.log("Successfully sent recurring donation in Strapi.");
+
             } catch (error) {
                 console.error('Error processing recurring donation:', error);
             }
@@ -189,7 +172,7 @@ export async function POST(request) {
         case 'customer.updated': // Recurring only.
         case 'customer.subscription.updated': // Recurring only.
         default: {
-            console.error('event.data.object:', JSON.stringify(event.data.object));
+            // console.error('event.data.object:', JSON.stringify(event.data.object));
             break;
         }
     }

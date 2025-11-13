@@ -20,15 +20,17 @@
     - Token duration: Unlimited
     - Type: Custom
 
-    Under Permissions, give the token access `find` and `findOne` access for the following:
+    Under Permissions, give the token access to
 
-    - `Blog-author`
-    - `Blog-post`
-    - `Cause`
-    - `Global` (does not have `findOne`)
-    - `Organization`
-    - `Page`
-    - `Special-page`
+    - `find` and `findOne` access for the following:
+      - `Blog-author`
+      - `Blog-post`
+      - `Cause`
+      - `Global` (does not have `findOne`)
+      - `Organization`
+      - `Page`
+      - `Special-page`
+    - `donate`, `donateStripeRecurring`, `disputeDonation` for `Donation`.
 
     Click Save and place the token you are given to `.env` under `NEXT_PUBLIC_STRAPI_API_TOKEN`.
 
