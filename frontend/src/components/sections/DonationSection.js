@@ -267,7 +267,8 @@ export default function DonationSection(props) {
                 }
                 setValidity={setValidity}
               />
-              {donation.type === "onetime" && (
+              {/* not for LV */}
+              {donation.type === "onetime" && false && (
                 <DedicationInput
                   dedicateDonationText={props.dedicateDonationText}
                   dedicateDonation={donation.dedicateDonation}
