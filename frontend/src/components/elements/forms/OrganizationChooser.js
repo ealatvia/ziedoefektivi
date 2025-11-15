@@ -126,7 +126,7 @@ export default function OrganizationChooser({
                       "flex flex-col gap-6",
                     )}
                   >
-                    {cause.attributes.organizations.data.map(
+                    {cause.attributes.organizations.data.filter(({attributes}) => !!attributes.active).map(
                       (organization, organizationIndex) => (
                         <div
                           key={organizationIndex}
