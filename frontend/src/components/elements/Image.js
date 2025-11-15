@@ -7,7 +7,7 @@ export default function Image({
   priority = false,
 }) {
   const image = data.data?.attributes;
-  
+
   const getImageUrl = (url) => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
