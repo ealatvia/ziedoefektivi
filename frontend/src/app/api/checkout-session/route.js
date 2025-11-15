@@ -16,10 +16,10 @@ export async function GET(request) {
             });
 
             return NextResponse.json({
-                payment_intent: session.payment_intent?.id || session.subscription?.id,
+                paymentIntentId: session.payment_intent?.id,
                 customer_email: session.customer_email,
                 amount_total: session.amount_total,
-                subscription: !!session.subscription,
+                subscriptionId: session.subscription?.id,
                 metadata: session.metadata, // Include the metadata from the session for logging
             });
         } else {

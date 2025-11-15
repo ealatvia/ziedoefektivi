@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 export default function SuccessPage({
-                                        title = "Paldies par ziedojumu!",
-                                        description = "Tavs ziedojums ir veiksmīgi saņemts.",
-                                        recurringDescription = "Tavs pirmais regulārā ziedojuma maksājums ir saņemts. Lai atceltu vai veiktu izmainas regularājam ziedojumam, sazinieties ar mums!",
-                                    }) {
+    title = "Paldies par ziedojumu!",
+    description = "Tavs ziedojums ir veiksmīgi saņemts.",
+    recurringDescription = "Tavs pirmais regulārā ziedojuma maksājums ir saņemts. Lai atceltu vai veiktu izmainas regularājam ziedojumam, sazinieties ar mums!",
+}) {
     const searchParams = useSearchParams();
     const [loading, setLoading] = useState(true);
     const [session, setSession] = useState(null);
+    console.log(session)
 
     useEffect(() => {
         const sessionId = searchParams.get('session_id');
@@ -46,11 +47,16 @@ export default function SuccessPage({
                     {title}
                 </h1>
                 <p className="text-gray-600 mb-4">
-                    {session?.subscription ? recurringDescription : description}
+                    {session?.subscriptionId ? recurringDescription : description}
                 </p>
                 {session && (
                     <div className="mt-6 text-sm text-gray-500">
-                        <p>Payment ID: {session.payment_intent}</p>
+                        {session.paymentIntentId && (
+                            <p>Payment ID: <code>{session.paymentIntentId}</code></p>
+                        )}
+                        {session.subscriptionId && (
+                            <p>Subscription ID: <code>{session.subscriptionId}</code></p>
+                        )}
                     </div>
                 )}
             </div>
