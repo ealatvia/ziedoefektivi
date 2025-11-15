@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { headers } from 'next/headers';
 import { makeDisputeRequest, makeDonationRequest, makeStripeRecurringDonationRequest } from '@/utils/strapi';
-import { logDonation } from '@/utils/discordLogger';
 
 // This webhook gets called by Stripe whenever a payment goes through. Also recurring payments I believe.
 
@@ -32,66 +31,27 @@ export async function POST(request) {
     console.log("STRIPE WEBHOOK " + event.type);
     switch (event.type) {
         case 'checkout.session.completed': { // Both single and first time recurring.
-            const session = event.data.object;
-
-            // Extract metadata
-            const {
-                donationType,
-                firstName,
-                lastName,
-                idCode,
-                amounts,
-                companyName,
-                companyCode,
-                dedicationName,
-                dedicationEmail,
-                dedicationMessage,
-            } = session.metadata;
+            const { metadata, amount_total, customer_details, payment_intent, subscription } = event.data.object;
 
             // Prepare donation data in the same format as the original request
             const donationData = {
-                amount: session.amount_total, // Use correct Stripe field
-                type: donationType,
-                firstName,
-                lastName,
-                email: session.customer_details?.email,
-                idCode,
-                amounts: JSON.parse(amounts),
+                amount: amount_total, // Use correct Stripe field
+                type: metadata.donationType,
+                firstName: metadata.firstName,
+                lastName: metadata.lastName,
+                email: customer_details?.email,
+                amounts: JSON.parse(metadata.amounts),
                 paymentMethod: "cardPayments",
-                stripePaymentIntentId: session.payment_intent,
-                stripeSubscriptionId: session.subscription,
+                companyCode: metadata.companyCode,
+                companyName: metadata.companyName,
+                stripePaymentIntentId: payment_intent,
+                stripeSubscriptionId: subscription,
                 finalized: true, // Event "checkout.session.completed" implies the payment is finalized.
             };
 
-            // Add optional fields if they exist
-            if (companyName) {
-                donationData.companyName = companyName;
-                donationData.companyCode = companyCode;
-            }
-
-            if (dedicationName && donationType === 'onetime') {
-                donationData.dedicationName = dedicationName;
-                donationData.dedicationEmail = dedicationEmail;
-                donationData.dedicationMessage = dedicationMessage;
-            }
-
             try {
-                // First, log the donation to Discord regardless of Strapi success
-                try {
-                    await logDonation(
-                        {
-                            amount: donationData.amount / 100, // Convert from cents
-                        },
-                        'stripe (onetime)',
-                        session.payment_intent,
-                    );
-                } catch (logError) {
-                    console.error('Error logging donation to Discord:', logError);
-                }
-
                 await makeDonationRequest(donationData);
                 console.log("Successfully sent donation to Strapi.");
-
             } catch (error) {
                 console.error('Error processing donation:', error);
             }
@@ -107,22 +67,8 @@ export async function POST(request) {
 
         case 'charge.dispute.funds_withdrawn': {
             try {
-                // First, log the donation to Discord regardless of Strapi success
-                try {
-                    await logDonation(
-                        {
-                            amount: event.data.object.amount_total / 100, // Convert from cents
-                        },
-                        'stripe',
-                        event.data.object.payment_intent,
-                    );
-                } catch (logError) {
-                    console.error('Error logging donation to Discord:', logError);
-                }
-
                 await makeDisputeRequest(event.data.object);
                 console.log("Successfully disputed donation in Strapi.");
-
             } catch (error) {
                 console.error('Error processing donation:', error);
             }
@@ -131,22 +77,8 @@ export async function POST(request) {
 
         case 'invoice.payment_succeeded': {// Recurring only.
             try {
-                // First, log the donation to Discord regardless of Strapi success
-                try {
-                    await logDonation(
-                        {
-                            amount: event.data.object.amount_total / 100, // Convert from cents
-                        },
-                        'stripe (recurring)',
-                        event.data.object.payment_intent,
-                    );
-                } catch (logError) {
-                    console.error('Error sending recurring donation to Discord:', logError);
-                }
-
                 await makeStripeRecurringDonationRequest(event.data.object);
                 console.log("Successfully sent recurring donation in Strapi.");
-
             } catch (error) {
                 console.error('Error processing recurring donation:', error);
             }

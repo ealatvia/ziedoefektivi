@@ -1,5 +1,7 @@
 "use strict";
 
+const { DiscordLogger } = require("../../../utils/DiscordLogger");
+
 const { createCoreController } = require("@strapi/strapi").factories;
 const { decodeOrderToken } = require("../../../utils/montonio");
 
@@ -15,6 +17,7 @@ module.exports = createCoreController(
           .createDonation(donation);
         return ctx.send({ redirectURL });
       } catch (error) {
+        DiscordLogger.singleton.error(error);
         return ctx.badRequest(error.message);
       }
     },
@@ -25,14 +28,19 @@ module.exports = createCoreController(
      */
       const { subscription, payment_intent, created, amount_paid } = ctx.request.body;
 
-      await strapi.service("api::donation.donation").createSingleDonationFromRecurringDonation({
-        stripeSubscriptionId: subscription,
-        stripePaymentIntentId: payment_intent,
-        createdAt: created * 1000,
-        amount: amount_paid
-      });
+      try {
+        await strapi.service("api::donation.donation").createSingleDonationFromRecurringDonation({
+          stripeSubscriptionId: subscription,
+          stripePaymentIntentId: payment_intent,
+          createdAt: created * 1000,
+          amount: amount_paid
+        });
 
-      return ctx.send({});
+        return ctx.send({});
+      } catch (error) {
+        DiscordLogger.singleton.error(error);
+        return ctx.badRequest(error.message);
+      }
     },
 
     async donateExternal(ctx) {
@@ -76,7 +84,7 @@ module.exports = createCoreController(
       try {
         decoded = decodeOrderToken(orderToken);
       } catch (error) {
-        console.error(error);
+        DiscordLogger.singleton.error(error);
         return ctx.badRequest("Invalid payment token");
       }
 
@@ -108,7 +116,7 @@ module.exports = createCoreController(
           },
         });
       } catch (error) {
-        console.error(error);
+        DiscordLogger.singleton.error(error);
         return ctx.badRequest("Failed to update donation");
       }
 
@@ -140,7 +148,7 @@ module.exports = createCoreController(
       try {
         decoded = decodeOrderToken(orderToken);
       } catch (error) {
-        console.error(error);
+        DiscordLogger.singleton.error(error);
         return ctx.badRequest("Invalid payment token");
       }
 
@@ -208,7 +216,7 @@ module.exports = createCoreController(
       //     .service("api::donor.donor")
       //     .donorsWithFinalizedDonationCount();
       // } catch (error) {
-      //   console.error(error);
+      //   DiscordLogger.singleton.error(error);
       //   return ctx.badRequest("Failed to get donor count");
       // }
 
@@ -218,7 +226,7 @@ module.exports = createCoreController(
           .service("api::donation.donation")
           .sumOfFinalizedDonations();
       } catch (error) {
-        console.error(error);
+        DiscordLogger.singleton.error(error);
         return ctx.badRequest("Failed to get donation count");
       }
 
@@ -228,7 +236,7 @@ module.exports = createCoreController(
           .service("api::donation.donation")
           .sumOfFinalizedCampaignDonations();
       } catch (error) {
-        console.error(error);
+        DiscordLogger.singleton.error(error);
         return ctx.badRequest("Failed to get campaign donation count");
       }
 
@@ -248,7 +256,7 @@ module.exports = createCoreController(
           .service("api::donation.donation")
           .findTransactionDonation({ idCode, amount, date });
       } catch (error) {
-        console.error(error);
+        DiscordLogger.singleton.error(error);
         return ctx.badRequest(error.message);
       }
 
@@ -286,7 +294,7 @@ module.exports = createCoreController(
           .disputeDonation(payment_intent, id, new Date(created * 1000));
         return ctx.send();
       } catch (error) {
-        console.error(error);
+        DiscordLogger.singleton.error(error);
         return ctx.badRequest("Failed to update donation");
       }
     },

@@ -3,10 +3,10 @@
 import { useRouter } from 'next/navigation';
 
 export default function CancelPage({
-                                       title = "Payment Cancelled",
-                                       description = "Your donation has been cancelled. No payment has been processed.",
-                                       returnText = "Return to Donation Page"
-                                   }) {
+    title = "Ziedojums atcelts",
+    description = "Jūsu ziedojums tika atcelts un maksājums netika apstrādāts.",
+    returnText = "Atpakaļ"
+}) {
     const router = useRouter();
 
     return (
@@ -20,7 +20,7 @@ export default function CancelPage({
                     {description}
                 </p>
                 <button
-                    onClick={() => router.push('/donate')}
+                    onClick={() => router.push('/ziedot')}
                     className="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-lg"
                 >
                     {returnText}
