@@ -16,7 +16,7 @@ module.exports = createCoreController(
           }
         );
       } catch (error) {
-        console.error(error);
+        DiscordLogger.singleton.error(error);
         return ctx.badRequest("Failed to create contact submission");
       }
 
@@ -47,7 +47,7 @@ module.exports = createCoreController(
       try {
         await Promise.all(emailPromises);
       } catch (error) {
-        console.error(error);
+        DiscordLogger.singleton.error(error);
         return ctx.badRequest("Failed to send emails");
       }
 

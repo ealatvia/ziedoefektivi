@@ -209,7 +209,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
 
         return { redirectURL };
       } catch (error) {
-        console.error(error);
+        DiscordLogger.singleton.error(error);
         throw new Error("Failed to create recurring donation");
       }
     }
@@ -223,7 +223,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       });
       return result;
     } catch (error) {
-      console.error(error);
+      DiscordLogger.singleton.error(error);
       throw new Error("Failed to create single donation");
     }
   },

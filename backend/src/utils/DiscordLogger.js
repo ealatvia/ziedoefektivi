@@ -7,7 +7,6 @@ const IS_PROD = process.env.NODE_ENV === 'production'
 // TODO: Move to variables
 const STRAPI_URL = `http://${IS_PROD ? 'splendid-sunshine-fb3754d635.strapiapp.com' : 'localhost:1337'}/admin`
 const STRIPE_URL = `https://dashboard.stripe.com/acct_1Qg6lABalMjw6J28${IS_PROD ? '' : '/test'}`
-const LOG_LEVELS_TO_DISCORD = ['error', 'warn', 'info']; // 'debug', 'log'
 
 let _singleton
 class DiscordLogger {
@@ -24,28 +23,26 @@ class DiscordLogger {
     return _singleton;
   }
 
-  constructor() {
-    this._setupConsoleOverrides();
+  /**
+   * @param {Error} error
+   */
+  error(error) {
+    console.error(error)
+    return this._postToDiscord(DISCORD_WEBHOOK_BACKEND_CONSOLE, this._formatConsoleMessage('error', [error]))
   }
-
-  _setupConsoleOverrides() {
-    if (!DISCORD_WEBHOOK_BACKEND_CONSOLE) return;
-    this._originalConsole = {
-      log: console.log,
-      info: console.info,
-      warn: console.warn,
-      error: console.error,
-      debug: console.debug,
-    };
-    for(const level of Object.keys(this._originalConsole)) {
-      console[level] = (...args) => {
-        this._originalConsole[level](...args);
-
-        if (LOG_LEVELS_TO_DISCORD.includes(level)) {
-          this._postToDiscord(DISCORD_WEBHOOK_BACKEND_CONSOLE, this._formatConsoleMessage(level, args));
-        }
-      };
-    };
+  /**
+   * @param {unknown[]} args
+   */
+  warn(...args) {
+    console.warn(...args)
+    return this._postToDiscord(DISCORD_WEBHOOK_BACKEND_CONSOLE, this._formatConsoleMessage('warn', args))
+  }
+  /**
+   * @param {unknown[]} args
+   */
+  info(...args) {
+    console.info(...args)
+    return this._postToDiscord(DISCORD_WEBHOOK_BACKEND_CONSOLE, this._formatConsoleMessage('info', args))
   }
 
   /**
@@ -75,6 +72,14 @@ class DiscordLogger {
       if (arg === null) return 'null';
       if (arg === undefined) return 'undefined';
 
+      if (arg instanceof Error) {
+        try {
+          return arg.stack?.split('\n').slice(0, 5).join('\n')
+        } catch (e) {
+          return '[Error.stack is not a string]';
+        }
+      }
+
       if (typeof arg === 'object') {
         try {
           return JSON.stringify(arg, null, 2);
@@ -96,9 +101,9 @@ class DiscordLogger {
 
     // Format as Discord embed
     return {
-      content: `**[${serverName}]** New ${level} log from ${environment}`,
+      content: `**[${environment}]** ${level}:`,
       embeds: [{
-        title: `${level.toUpperCase()} Log`,
+        title: undefined,
         description: `\`\`\`\n${messageContent.substring(0, 4000)}\n\`\`\``,
         color: colors[level] || 0x000000,
         timestamp: new Date().toISOString(),
