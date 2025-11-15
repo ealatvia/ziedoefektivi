@@ -375,7 +375,8 @@ export default function DonationSection(props) {
                   buttonType="submit"
                   className="mt-4"
               />
-              <Button
+              {/* TODO: implement Latvian bank flow */}
+              {/* <Button
                   text="Ziedot ar bankas pārskaitījumu"
                   type="primary"
                   size="lg"
@@ -389,7 +390,7 @@ export default function DonationSection(props) {
                   disabled={!stageValidity[3]}
                   buttonType="submit"
                   className="mt-4"
-              />
+              /> */}
             </form>
           )}
         </div>
