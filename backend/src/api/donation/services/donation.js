@@ -15,6 +15,7 @@ const {
   textIntoParagraphs,
   sanitize,
 } = require("../../../utils/string");
+const { DiscordLogger } = require("../../../utils/DiscordLogger");
 
 module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
   /**
@@ -181,12 +182,12 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     return payload;
   },
 
-/**
- * @param {{amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode?: string,amounts: { organizationId: number, amount: number }[],paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntentId?: string, stripeSubscriptionId?: string}} donation
- * @param {*} customReturnUrl
- * @param {*} externalDonation
- * @returns
- */
+  /**
+   * @param {{amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode?: string,amounts: { organizationId: number, amount: number }[],paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntentId?: string, stripeSubscriptionId?: string}} donation
+   * @param {*} customReturnUrl
+   * @param {*} externalDonation
+   * @returns
+   */
   async createDonation(donation, customReturnUrl, externalDonation) {
     const validation = await this.validateDonation(donation);
 
@@ -285,6 +286,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
 
     // Card payments via Stripe - handled by separate webhook, return empty redirect
     if (donation.paymentMethod === "cardPayments") {
+      await DiscordLogger.singleton.logDonation({...donation, donationId: donationEntry.id});
       return { redirectURL: "" };
     }
   },
@@ -442,6 +444,15 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
           recurringDonation.organizationRecurringDonations,
       });
 
+    await DiscordLogger.singleton.logDonation({
+      amount: amount,
+      companyName: recurringDonation.companyName,
+      paymentMethod: recurringDonation.bank,
+      donationId: donation.id,
+      stripePaymentIntentId,
+      subscriptionId: recurringDonation.id,
+      stripeSubscriptionId,
+    });
     // TODO: send confirmation email with invoice link.
   },
 
@@ -1104,9 +1115,14 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
   async disputeDonation(stripePaymentIntentId, disputeId, createdAt) {
     const [donation] = await strapi.entityService.findMany(
       "api::donation.donation",
-      { filters: {
-        stripePaymentIntentId: stripePaymentIntentId
-      }}
+      {
+        filters: {
+          stripePaymentIntentId: stripePaymentIntentId
+        },
+        populate: [
+          "recurringDonation",
+        ],
+      }
     );
 
     if (!donation) {
@@ -1122,6 +1138,16 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
           `Dispute TODO: please resolve dispute manually. Even if you win, consider this donation never happened and handle recovered funds manually.`
         ].join('\n')
       },
+    });
+    await DiscordLogger.singleton.disputeDonation({
+      amount: donation.amount,
+      companyName: donation.companyName,
+      paymentMethod: donation.paymentMethod,
+      donationId: donation.id,
+      stripePaymentIntentId,
+      disputeId,
+      subscriptionId: donation.recurringDonation?.id,
+      stripeSubscriptionId: donation.recurringDonation?.stripeSubscriptionId,
     });
   },
 

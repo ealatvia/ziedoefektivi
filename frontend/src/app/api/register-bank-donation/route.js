@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
-import {logDonation} from "@/utils/discordLogger";
 import { makeDonationRequest } from "@/utils/strapi";
+
+// TODO: unused, revise when implementing bank transfers.
 
 export async function POST(request) {
     let loggedToDiscord = false;
@@ -26,17 +27,17 @@ export async function POST(request) {
             }
 
             // Log to dedicated Discord channel
-            await logDonation(
-                {
-                    id: donation.id,
-                    amount: donation.amount + donation.tipAmount,
-                    tipOrganization: donation.tipOrganization,
-                },
-                'bank',
-                null,
-                organizations
-            );
-            loggedToDiscord = true;
+            // await logDonation(
+            //     {
+            //         id: donation.id,
+            //         amount: donation.amount + donation.tipAmount,
+            //         tipOrganization: donation.tipOrganization,
+            //     },
+            //     'bank',
+            //     null,
+            //     organizations
+            // );
+            // loggedToDiscord = true;
         } catch (logError) {
             console.error('Error logging donation to Discord:', logError);
         }
