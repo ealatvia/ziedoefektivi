@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { at, pick } from "@/utils/object";
 import AmountChooser from "../elements/forms/AmountChooser";
 import DonationTypeChooser from "../elements/forms/DonationTypeChooser";
@@ -38,6 +38,21 @@ export default function DonationSection(props) {
     setModalOpen(true);
   }
 
+  // Dynamically ignore inactive organizations within causes.
+  const causes = useMemo(() => ({
+    ...props.causes,
+      data: props.causes.data.map((cause) => ({
+      ...cause,
+      attributes: {
+        ...cause.attributes,
+        organizations: {
+          ...cause.attributes.organizations,
+          data: cause.attributes.organizations.data.filter(({attributes}) => !!attributes.active)
+        }
+      }
+    }))
+  }), [props.causes.data]);
+
   const amounts = at(props, ["amount1", "amount2", "amount3"]);
   const amountOptions = amounts.map((amount) => ({
     value: amount,
@@ -60,7 +75,7 @@ export default function DonationSection(props) {
     dedicationName: "",
     dedicationEmail: "",
     dedicationMessage: "",
-    proportions: Proportions.fromStrapiData(props.causes.data, orgParam),
+    proportions: Proportions.fromStrapiData(causes.data, orgParam),
     addTip: false,
     paymentMethod: "paymentInitiation",
     acceptTerms: false,
@@ -102,7 +117,7 @@ export default function DonationSection(props) {
       "paymentMethod",
     ]);
     donationData.amounts = donation.proportions
-      .calculateAmounts(donation.amount, props.causes)
+      .calculateAmounts(donation.amount, causes)
       .reduce((record, { organizationId, amount }) => ({ ...record, [organizationId]: Math.round(amount * 100) }), {})
     if (tipAmount > 0) {
       donationData.amounts[props.global.tipOrganizationId] = Math.round(tipAmount * 100)
@@ -199,7 +214,7 @@ export default function DonationSection(props) {
                 informationText={props.informationText}
                 lockText={props.lockText}
                 letExpertsChooseText={props.letExpertsChooseText}
-                causes={props.causes}
+                causes={causes}
                 proportions={donation.proportions}
                 setProportions={(proportions) =>
                   setDonation({ ...donation, proportions })
@@ -344,7 +359,7 @@ export default function DonationSection(props) {
               </Markdown>
               <PaymentSummary
                 donation={donation}
-                causes={props.causes}
+                causes={causes}
                 currency={props.global.currency}
                 totalText={props.global.totalText}
                 tipOrganization={props.global.tipOrganization}
