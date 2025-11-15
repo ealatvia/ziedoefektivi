@@ -1126,7 +1126,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     );
 
     if (!donation) {
-      return ctx.badRequest("Donation not found");
+      throw new Error(`Donation not found: ${stripePaymentIntentId}`);
     }
 
     await strapi.entityService.update("api::donation.donation", donation.id, {
