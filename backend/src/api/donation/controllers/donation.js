@@ -55,12 +55,7 @@ module.exports = createCoreController(
         ...ctx.request.body,
         comment: `Return URL: ${returnUrl}`,
         // External donations always go to the specified organization
-        amounts: [
-          {
-            amount: ctx.request.body.amount,
-            organizationId: global.externalOrganizationId,
-          },
-        ],
+        amounts: {[global.externalOrganizationId]: ctx.request.body.amount},
       };
 
       try {

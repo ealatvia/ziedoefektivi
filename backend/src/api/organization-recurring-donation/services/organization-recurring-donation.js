@@ -7,13 +7,13 @@ module.exports = createCoreService(
   ({ strapi }) => ({
     async createOrganizationDonations({ recurringDonationId, amounts }) {
       return Promise.all(
-        amounts.map(async ({ organizationId, amount }) => {
+        Object.entries(amounts).map(async ([organizationId, amount]) => {
           await strapi.entityService.create(
             "api::organization-recurring-donation.organization-recurring-donation",
             {
               data: {
                 recurringDonation: recurringDonationId,
-                organization: organizationId,
+                organization: Number(organizationId),
                 amount,
               },
             }

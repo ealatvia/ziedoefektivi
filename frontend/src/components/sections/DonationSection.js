@@ -88,6 +88,10 @@ export default function DonationSection(props) {
     : 0;
   const totalAmount = Math.round((donation.amount + tipAmount) * 100) / 100;
 
+  /**
+   * Note that before this point `amounts` is an array, and after this point thorughout backend `amounts` is record.
+   * Stripe enforces 500char metadata limit, which is not sufficient for more than a dozen organizations at once.
+   */
   const donationData = () => {
     const donationData = pick(donation, [
       "type",
@@ -99,15 +103,9 @@ export default function DonationSection(props) {
     ]);
     donationData.amounts = donation.proportions
       .calculateAmounts(donation.amount, props.causes)
-      .map(({ organizationId, amount }) => ({
-        organizationId,
-        amount: Math.round(amount * 100),
-      }));
+      .reduce((record, { organizationId, amount }) => ({ ...record, [organizationId]: Math.round(amount * 100) }), {})
     if (tipAmount > 0) {
-      donationData.amounts.push({
-        organizationId: props.global.tipOrganizationId,
-        amount: Math.round(tipAmount * 100),
-      });
+      donationData.amounts[props.global.tipOrganizationId] = Math.round(tipAmount * 100)
     }
 
     donationData.amount = Math.round(totalAmount * 100);
