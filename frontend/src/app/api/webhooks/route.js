@@ -43,9 +43,6 @@ export async function POST(request) {
                 amounts,
                 companyName,
                 companyCode,
-                dedicationName,
-                dedicationEmail,
-                dedicationMessage,
             } = session.metadata;
 
             // Prepare donation data in the same format as the original request
@@ -67,12 +64,6 @@ export async function POST(request) {
             if (companyName) {
                 donationData.companyName = companyName;
                 donationData.companyCode = companyCode;
-            }
-
-            if (dedicationName && donationType === 'onetime') {
-                donationData.dedicationName = dedicationName;
-                donationData.dedicationEmail = dedicationEmail;
-                donationData.dedicationMessage = dedicationMessage;
             }
 
             try {
@@ -149,6 +140,7 @@ export async function POST(request) {
 
             } catch (error) {
                 console.error('Error processing recurring donation:', error);
+                console.error(JSON.stringify(event.data.object))
             }
             break;
         }
