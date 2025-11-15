@@ -1110,7 +1110,6 @@ export interface ApiDonorDonor extends Schema.CollectionType {
   };
   attributes: {
     idCode: Attribute.String &
-      Attribute.Required &
       Attribute.SetMinMaxLength<{
         minLength: 12;
         maxLength: 12;
@@ -1124,6 +1123,8 @@ export interface ApiDonorDonor extends Schema.CollectionType {
         maxLength: 128;
       }>;
     email: Attribute.Email &
+      Attribute.Required &
+      Attribute.Unique &
       Attribute.SetMinMaxLength<{
         maxLength: 256;
       }>;

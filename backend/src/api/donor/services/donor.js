@@ -7,37 +7,17 @@
 const { createCoreService } = require("@strapi/strapi").factories;
 
 module.exports = createCoreService("api::donor.donor", ({ strapi }) => ({
-  async findDonor(idCode) {
+  async findDonor(email) {
     const existingDonorEntries = await strapi.entityService.findMany(
       "api::donor.donor",
-      { filters: { idCode: idCode } }
+      { filters: { email } }
     );
 
-    if (existingDonorEntries.length > 0) {
-      return existingDonorEntries[0];
-    }
-
-    const recurringDonations = await strapi.entityService.findMany(
-      "api::recurring-donation.recurring-donation",
-      {
-        filters: {
-          companyCode: idCode,
-        },
-        populate: ["donor"],
-        sort: "datetime:desc",
-        limit: 1,
-      }
-    );
-
-    if (recurringDonations.length > 0) {
-      return recurringDonations[0].donor;
-    }
-
-    return null;
+    return existingDonorEntries[0] ?? null
   },
 
   async findOrCreateDonor(donor) {
-    const donorEntry = await this.findDonor(donor.idCode);
+    const donorEntry = await this.findDonor(donor.email);
 
     if (donorEntry) {
       return donorEntry;
@@ -68,7 +48,7 @@ module.exports = createCoreService("api::donor.donor", ({ strapi }) => ({
         data: {
           firstName: donor.firstName,
           lastName: donor.lastName,
-          email: donor.email,
+          idCode: donor.idCode,
         },
       }
     );
@@ -78,10 +58,10 @@ module.exports = createCoreService("api::donor.donor", ({ strapi }) => ({
 
   async donorsWithFinalizedDonationCount() {
     const result = await strapi.db.connection.raw(
-      `SELECT COUNT(DISTINCT donations_donor_links.donor_id) 
-       FROM donations 
-       JOIN donations_donor_links ON donations.id = donations_donor_links.donation_id 
-       JOIN donors ON donations_donor_links.donor_id = donors.id 
+      `SELECT COUNT(DISTINCT donations_donor_links.donor_id)
+       FROM donations
+       JOIN donations_donor_links ON donations.id = donations_donor_links.donation_id
+       JOIN donors ON donations_donor_links.donor_id = donors.id
        WHERE donations.finalized = true`
     );
     const count = Number(result.rows[0].count);

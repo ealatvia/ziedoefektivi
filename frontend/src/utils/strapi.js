@@ -33,10 +33,10 @@ export async function fetchAPI(path, urlParamsObject = {}, options = {}) {
     )}`;
 
     // Trigger API call
-    console.log(requestUrl, mergedOptions)
+    if(!requestUrl.includes('populate=deep')) console.log(requestUrl, mergedOptions)
     const response = await fetch(requestUrl, mergedOptions);
     const data = await response.json();
-    console.log(response, data)
+    if(!requestUrl.includes('populate=deep')) console.log(response, data)
     return data;
   } catch (error) {
     console.error(error);

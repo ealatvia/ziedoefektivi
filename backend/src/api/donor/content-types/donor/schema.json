@@ -16,7 +16,7 @@
       "type": "string",
       "maxLength": 12,
       "minLength": 12,
-      "required": true,
+      "required": false,
       "regex": "^[0-3]\\d{5}-\\d{5}$"
     },
     "firstName": {
@@ -29,7 +29,9 @@
     },
     "email": {
       "type": "email",
-      "maxLength": 256
+      "maxLength": 256,
+      "required": true,
+      "unique": true
     },
     "recurringDonor": {
       "type": "boolean"

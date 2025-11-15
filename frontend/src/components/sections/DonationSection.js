@@ -52,7 +52,6 @@ export default function DonationSection(props) {
     firstName: "",
     lastName: "",
     email: "",
-    idCode: "",
     bank: "",
     companyDonation: false,
     companyName: "",
@@ -74,7 +73,6 @@ export default function DonationSection(props) {
       "firstName",
       "lastName",
       "email",
-      "idCode",
       "company",
       "dedication",
     ]).every(Boolean),
@@ -96,7 +94,6 @@ export default function DonationSection(props) {
       "firstName",
       "lastName",
       "email",
-      "idCode",
       "bank",
       "paymentMethod",
     ]);
@@ -250,13 +247,6 @@ export default function DonationSection(props) {
                 emailText={props.emailText}
                 email={donation.email}
                 setEmail={(email) => setDonation({ ...donation, email })}
-                setValidity={setValidity}
-              />
-              <IdCodeInput
-                idCodeText={props.idCodeText}
-                idCodeDescription={props.idCodeDescription}
-                idCode={donation.idCode}
-                setIdCode={(idCode) => setDonation({ ...donation, idCode })}
                 setValidity={setValidity}
               />
               <CompanyInput
