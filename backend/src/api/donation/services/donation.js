@@ -284,6 +284,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     // Card payments via Stripe - handled by separate webhook, return empty redirect
     if (donation.paymentMethod === "cardPayments") {
       await DiscordLogger.singleton.logDonation({...donation, donationId: donationEntry.id});
+      await this.sendConfirmationEmail(donationEntry.id)
       return { redirectURL: "" };
     }
   },
@@ -318,6 +319,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
           amounts: donation.amounts,
         });
 
+      await this.sendRecurringConfirmationEmail(recurringDonationEntry.id);
       return { redirectURL: "" };
     }
 
