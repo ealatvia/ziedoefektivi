@@ -1,4 +1,4 @@
-import Page from "../../components/Page";
+import Section from "@/components/Section";
 import { buildMetadata } from "../../utils/seo";
 import { getGlobal, getPageBySlug, findSpecialPage } from "../../utils/strapi";
 
@@ -31,15 +31,24 @@ export default async function SlugPage({ params }) {
 
   const specialPage = await findSpecialPage(slug);
   if (specialPage) {
-    return (
-        <Page
-            page={specialPage.page}
-            entity={specialPage.entity}
-            global={global}
-        />
-    );
+    return specialPage.page.sections.map((section) => (
+      <Section
+        key={section.id}
+        section={section}
+        page={specialPage.page}
+        entity={specialPage.entity}
+        global={global}
+      />
+    ))
   }
 
   const page = await getPageBySlug(slug);
-  return <Page page={page} global={global} />;
+  return page.sections.map((section) => (
+    <Section
+      key={section.id}
+      section={section}
+      global={global}
+      page={page}
+    />
+  ))
 }
