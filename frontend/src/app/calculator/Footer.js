@@ -27,17 +27,6 @@ export default function Footer() {
           <ArrowTopRightOnSquareIcon className="mb-1 ml-1 inline h-4 w-4" />
         </a>
       </div>
-      <div>
-        <a
-          href="https://github.com/ealatvia/ziedoefektivi"
-          className="whitespace-nowrap font-semibold text-primary-700 hover:opacity-70"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Rīka pirmkods
-          <ArrowTopRightOnSquareIcon className="mb-1 ml-1 inline h-4 w-4" />
-        </a>
-      </div>
     </div>
   );
 }
