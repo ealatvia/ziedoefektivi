@@ -15,7 +15,8 @@
         "primary",
         "secondary",
         "white",
-        "text"
+        "text",
+        "textWhite"
       ]
     },
     "arrow": {

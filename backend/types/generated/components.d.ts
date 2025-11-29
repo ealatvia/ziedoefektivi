@@ -32,7 +32,9 @@ export interface ElementsButton extends Schema.Component {
   };
   attributes: {
     text: Attribute.String;
-    type: Attribute.Enumeration<['primary', 'secondary', 'white', 'text']>;
+    type: Attribute.Enumeration<
+      ['primary', 'secondary', 'white', 'text', 'textWhite']
+    >;
     arrow: Attribute.Boolean & Attribute.DefaultTo<false>;
     href: Attribute.String;
     newTab: Attribute.Boolean & Attribute.DefaultTo<false>;

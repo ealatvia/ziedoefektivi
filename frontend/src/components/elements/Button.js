@@ -27,6 +27,7 @@ export default function Button({
     white:
       "text-primary-800 shadow-sm bg-white hover:bg-primary-100 focus-visible:outline-white disabled:hover:bg-white",
     text: "text-cyan-900 hover:opacity-70 focus-visible:outline-primary-600 disabled:hover:opacity-70",
+    textWhite: "text-cyan-100 hover:opacity-70 focus-visible:outline-primary-600 disabled:hover:opacity-70",
   };
 
   const sizes = {
