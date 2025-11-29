@@ -34,11 +34,11 @@ export default function ResultBarChart({
 }) {
   const data = [
     {
-      name: "Mediaan",
+      name: "Mediānas ienākumi",
       income: medianIncome,
     },
     {
-      name: "Sinu sissetulek",
+      name: "Jūsu ienākumi",
       income: internationalizedIncome,
     },
   ];
