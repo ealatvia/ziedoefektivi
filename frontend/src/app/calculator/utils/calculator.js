@@ -5,6 +5,7 @@ import { range } from "./utils";
 
 // https://github.com/owid/notebooks/blob/main/PabloArriagada/global_distribution_giving_what_we_can/wdi_ppp.csv
 const LATVIA_PPP = 0.6738879961021667;
+const EUR_to_USD = 1.08; // 1 EUR was worth approximately 1.08 USD in 2024, averaged over the year
 
 const DAYS_PER_YEAR = 365.2425;
 const DAYS_PER_MONTH = DAYS_PER_YEAR / 12;
@@ -19,7 +20,7 @@ export const monthlyToDaily = (monthlyIncome) => monthlyIncome / DAYS_PER_MONTH;
 
 export const dailyToMonthly = (dailyIncome) => dailyIncome * DAYS_PER_MONTH;
 
-export const internationalizeIncome = (incomeEUR) => incomeEUR / LATVIA_PPP;
+export const internationalizeIncome = (incomeEUR) => incomeEUR * EUR_to_USD * LATVIA_PPP;
 
 export const getPercentile = (dailyIncomeIUSD) => {
   const smaller_percentile = PIP_GLOBAL_PERCENTILES.findLast(
