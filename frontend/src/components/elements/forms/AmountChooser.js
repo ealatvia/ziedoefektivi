@@ -37,7 +37,7 @@ function AmountInput({ amount, setAmount, currency, label, setValidity }) {
           aria-describedby="amount-currency"
           value={localValue}
           placeholder={label}
-          onInput={(event) => setLocalValue(event.target.value)}
+          onInput={(event) => setLocalValue(String(event.target.value).replace(/[^0-9.,]/g,''))}
           autoFocus
         />
         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-5">
