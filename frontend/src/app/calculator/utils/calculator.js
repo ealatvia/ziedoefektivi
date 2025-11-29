@@ -4,7 +4,7 @@ import PIP_GLOBAL_PERCENTILES from "../data/pip_global_percentiles.json";
 import { range } from "./utils";
 
 // https://github.com/owid/notebooks/blob/main/PabloArriagada/global_distribution_giving_what_we_can/wdi_ppp.csv
-const LATVIA_PPP = 0.7193884839583855;
+const LATVIA_PPP = 0.6738879961021667;
 
 const DAYS_PER_YEAR = 365.2425;
 const DAYS_PER_MONTH = DAYS_PER_YEAR / 12;
