@@ -9,11 +9,6 @@
     "title": {
       "type": "string"
     },
-    "emailCopiedText": {
-      "type": "string",
-      "default": "Email copied to clipboard!",
-      "required": true
-    },
     "teamMembers": {
       "type": "component",
       "repeatable": true,

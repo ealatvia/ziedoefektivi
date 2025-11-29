@@ -436,9 +436,6 @@ export interface SectionsTeamSection extends Schema.Component {
   };
   attributes: {
     title: Attribute.String;
-    emailCopiedText: Attribute.String &
-      Attribute.Required &
-      Attribute.DefaultTo<'Email copied to clipboard!'>;
     teamMembers: Attribute.Component<'elements.team-member', true>;
   };
 }

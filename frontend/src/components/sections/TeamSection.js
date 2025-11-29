@@ -3,11 +3,9 @@ import Image from "../elements/Image";
 import Markdown from "../elements/Markdown";
 import Button from "../elements/Button";
 import { SocialMediaIcon } from "../elements/SocialMediaIcon";
-import CopyButton from "../elements/CopyButton";
 
 export default function TeamSection({
   title,
-  emailCopiedText,
   teamMembers,
   global,
 }) {
@@ -45,18 +43,9 @@ export default function TeamSection({
                 )}
                 {teamMember.email || teamMember.socialMediaLinks.length ? (
                   <div className="mt-6 flex gap-2">
-                    {teamMember.email && (
-                      <CopyButton
-                        textToCopy={teamMember.email}
-                        copiedText={emailCopiedText}
-                        closeText={global.closeText}
-                        size="link"
-                        type="text"
-                        className="text-slate-400"
-                        noIcon={true}
-                      >
+                    {teamMember.email && (<a href={`mailto:${teamMember.email}`}>
                         <EnvelopeIcon className="h-6 w-6" />
-                      </CopyButton>
+                      </a>
                     )}
                     {teamMember.socialMediaLinks.map((socialMediaLink) => (
                       <Button
