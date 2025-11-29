@@ -14,7 +14,7 @@ const YTick = (props) => {
   let { payload, tickFormatter, verticalAnchor, visibleTicksCount, ...rest } =
     props;
   rest.className += " text-xs md:text-base";
-  return <text {...rest}>{payload.value}</text>;
+  return <text {...rest}>{payload.value}$</text>;
 };
 
 const XTick = (props) => {
@@ -49,14 +49,14 @@ export default function ResultBarChart({
         margin={{
           top: 0,
           right: 0,
-          left: 0,
+          left: 16,
           bottom: 0,
         }}
         barCategoryGap="25%"
       >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="name" tick={XTick} />
-        <YAxis tick={YTick} />
+        <YAxis tick={YTick} label={{ value: `Starptautiskie dolāri`, style: { textAnchor: 'middle' }, angle: -90, position: 'left' }} />
         <Bar
           dataKey="income"
           fill="#047857"
