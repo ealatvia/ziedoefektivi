@@ -4,7 +4,7 @@ import { EnvelopeIcon } from "@heroicons/react/24/outline";
 import Markdown from "../elements/Markdown";
 import { useState } from "react";
 import Button from "../elements/Button";
-import { getStrapiURL } from "@/utils/strapi";
+import { fetchAPI } from "@/utils/strapi";
 import Modal from "../Modal";
 
 export default function ContactSection(props) {
@@ -21,11 +21,7 @@ export default function ContactSection(props) {
   const ready = data.name && data.email && data.message;
 
   const submit = async () => {
-    const response = await fetch(getStrapiURL("/api/contact"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+    const response = await fetchAPI("/contact", {}, {
       body: JSON.stringify(data),
     });
 

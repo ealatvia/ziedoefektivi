@@ -30,7 +30,8 @@
       - `Organization`
       - `Page`
       - `Special-page`
-    - `donate`, `donateStripeRecurring`, `disputeDonation` for `Donation`.
+    - `donate`, `donateStripeRecurring`, `disputeDonation` for `Donation`
+    - `contact` for `Contact-submission`
 
     Click Save and place the token you are given to `.env` under `NEXT_PUBLIC_STRAPI_API_TOKEN`.
 
