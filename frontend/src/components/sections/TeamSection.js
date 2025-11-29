@@ -10,7 +10,7 @@ export default function TeamSection({
   global,
 }) {
   return (
-    <section className="bg-slate-50 px-4 py-12 pt-24 lg:px-8">
+    <section className="bg-cyan-100 px-4 py-12 pt-24 lg:px-8">
       <div className="container flex flex-col gap-12 lg:max-w-3xl">
         <h2 className="inline-block max-w-full break-words text-2xl font-semibold tracking-tight text-primary-700 xs:text-2xl xs:font-bold sm:text-3xl">
           {title}
@@ -28,11 +28,11 @@ export default function TeamSection({
                 />
               )}
               <div className="max-w-xl flex-auto">
-                <h3 className="text-lg font-semibold leading-8 tracking-tight text-slate-900">
+                <h3 className="text-lg font-semibold leading-8 tracking-tight text-cyan-900">
                   {teamMember.name}
                 </h3>
                 {teamMember.role && (
-                  <p className="text-base leading-7 text-slate-600">
+                  <p className="text-base leading-7 text-cyan-600">
                     {teamMember.role}
                   </p>
                 )}
@@ -55,7 +55,6 @@ export default function TeamSection({
                         newTab={true}
                         size="link"
                         type="text"
-                        className="text-slate-400"
                         noIcon={true}
                       >
                         <SocialMediaIcon type={socialMediaLink.type} />

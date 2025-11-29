@@ -20,7 +20,7 @@ export default function HeroSection({
         className="absolute inset-0 -z-10 h-full w-full object-cover object-[center_80%] xl:hidden"
         priority
       />
-      <div className="absolute inset-0 -z-10 h-full bg-primary-900/70 xl:bg-transparent xl:bg-gradient-to-br xl:from-primary-700/50 xl:from-20% xl:to-transparent"></div>
+      <div className="absolute inset-0 -z-10 h-full bg-primary-900/70 xl:bg-transparent xl:bg-gradient-to-br xl:from-primary-700/80 xl:from-20% xl:to-transparent"></div>
       <div className="mx-auto flex h-full max-w-6xl flex-col items-center  justify-center xl:items-start">
         <div className="min-h-full max-w-2xl px-4 xl:w-1/2 xl:px-0">
           <div className="flex min-h-full flex-col items-center justify-center text-center xl:items-start xl:text-left">

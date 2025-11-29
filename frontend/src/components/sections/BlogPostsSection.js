@@ -13,16 +13,16 @@ export default async function BlogPostsSection({ global, page }) {
             <Anchor key={post.id} href={`/${page.slug}/${post.slug}`}>
               <article
                 key={post.id}
-                className="group flex flex-col items-start gap-6 p-6 hover:cursor-pointer hover:bg-slate-100 sm:rounded-3xl"
+                className="group flex flex-col items-start gap-6 p-6 hover:cursor-pointer hover:bg-cyan-100 sm:rounded-3xl"
               >
                 <div className="relative w-full">
                   <Image
                     data={post.image}
-                    className="aspect-[2/1] w-full rounded-2xl bg-slate-200 object-cover md:aspect-[3/2]"
+                    className="aspect-[2/1] w-full rounded-2xl bg-cyan-200 object-cover md:aspect-[3/2]"
                   />
-                  <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-slate-900/10" />
+                  <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-cyan-900/10" />
                 </div>
-                <time dateTime={post.date} className="text-xs text-slate-500">
+                <time dateTime={post.date} className="text-xs text-cyan-500">
                   {new Date(post.date).toLocaleDateString(global.dateLocale, {
                     year: "numeric",
                     month: "long",
