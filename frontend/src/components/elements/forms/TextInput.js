@@ -11,6 +11,7 @@ export default function TextInput({
   placeholder,
   autoComplete,
   autoFocus = false,
+  required,
   maxLength,
   description,
 }) {
@@ -30,7 +31,7 @@ export default function TextInput({
         htmlFor={name}
         className="block text-sm font-medium leading-6 text-slate-900"
       >
-        {label}
+        {label} {required && <sup style={{color:'red'}}>*</sup>}
       </label>
       <div className="mt-2">
         <input

@@ -85,8 +85,6 @@ export default function DonationSection(props) {
   const stageValidity = {
     0: at(validity, ["amount"]).every(Boolean),
     1: at(validity, [
-      "firstName",
-      "lastName",
       "email",
       "company",
       "dedication",
@@ -241,6 +239,12 @@ export default function DonationSection(props) {
               <h2 className="text-2xl font-bold tracking-tight text-primary-700 sm:text-3xl">
                 {props.detailsText}
               </h2>
+              <EmailInput
+                emailText={props.emailText}
+                email={donation.email}
+                setEmail={(email) => setDonation({ ...donation, email })}
+                setValidity={setValidity}
+              />
               <NameInput
                 firstNameText={props.firstNameText}
                 lastNameText={props.lastNameText}
@@ -252,12 +256,6 @@ export default function DonationSection(props) {
                 setLastName={(lastName) =>
                   setDonation({ ...donation, lastName })
                 }
-                setValidity={setValidity}
-              />
-              <EmailInput
-                emailText={props.emailText}
-                email={donation.email}
-                setEmail={(email) => setDonation({ ...donation, email })}
                 setValidity={setValidity}
               />
               <CompanyInput

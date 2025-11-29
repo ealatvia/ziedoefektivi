@@ -19,19 +19,11 @@ const { DiscordLogger } = require("../../../utils/DiscordLogger");
 
 module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
   /**
-   * @param {{amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode?: string,amounts: Record<string, number>,paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntentId?: string}} donation
+   * @param {{amount: number,type: 'onetime' | 'recurring',firstName?: string,lastName?: string,email: string,idCode?: string,amounts: Record<string, number>,paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntentId?: string}} donation
    */
   async validateDonation(donation) {
     if (!donation) {
       return { valid: false, reason: "No donation provided" };
-    }
-
-    if (!donation.firstName) {
-      return { valid: false, reason: "No first name provided" };
-    }
-
-    if (!donation.lastName) {
-      return { valid: false, reason: "No last name provided" };
     }
 
     if (!donation.email) {
@@ -180,7 +172,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
   },
 
   /**
-   * @param {{amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode?: string,amounts: Record<string, number>,paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntentId?: string, stripeSubscriptionId?: string}} donation
+   * @param {{amount: number,type: 'onetime' | 'recurring',firstName?: string,lastName?: string,email: string,idCode?: string,amounts: Record<string, number>,paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntentId?: string, stripeSubscriptionId?: string}} donation
    * @param {*} customReturnUrl
    * @param {*} externalDonation
    * @returns
@@ -226,7 +218,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
   },
 
   /**
-   * @param {{donation: {amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode?: string,amounts: Record<string, number>,paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntentId?: string}, donor: {id: string}, customReturnUrl: string, externalDonation: boolean} donation
+   * @param {{donation: {amount: number,type: 'onetime' | 'recurring',firstName?: string,lastName?: string,email: string,idCode?: string,amounts: Record<string, number>,paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntentId?: string}, donor: {id: string}, customReturnUrl: string, externalDonation: boolean} donation
    */
   async createSingleDonation({
     donation,
@@ -290,7 +282,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
   },
 
   /**
-   * @param {{donation: {amount: number,type: 'onetime' | 'recurring',firstName: string,lastName: string,email: string,idCode?: string,amounts: { organizationId: number, amount: number }[],paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntentId?: string,stripeSubscriptionId?:string}, donor: {id: string}, externalDonation: boolean} donation
+   * @param {{donation: {amount: number,type: 'onetime' | 'recurring',firstName?: string,lastName?: string,email: string,idCode?: string,amounts: { organizationId: number, amount: number }[],paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntentId?: string,stripeSubscriptionId?:string}, donor: {id: string}, externalDonation: boolean} donation
    */
   async createRecurringDonation({ donation, donor, externalDonation }) {
     // Recurring card payments via Stripe - already created in Stripe as part of initial payment.
@@ -482,10 +474,10 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     };
 
     const data = {
-      firstName: donation.donor.firstName,
-      firstNameHtml: sanitize(donation.donor.firstName),
-      lastName: donation.donor.lastName,
-      lastNameHtml: sanitize(donation.donor.lastName),
+      firstName: donation.donor.firstName ?? 'Ziedotājs',
+      firstNameHtml: sanitize(donation.donor.firstName ?? 'Ziedotājs'),
+      lastName: donation.donor.lastName ?? 'Ziedotājs',
+      lastNameHtml: sanitize(donation.donor.lastName ?? 'Ziedotājs'),
       amount: formatAmount(donation.amount / 100),
       currency: global.currency,
     };
@@ -528,10 +520,10 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     };
 
     const data = {
-      firstName: donation.donor.firstName,
-      firstNameHtml: sanitize(donation.donor.firstName),
-      lastName: donation.donor.lastName,
-      lastNameHtml: sanitize(donation.donor.lastName),
+      firstName: donation.donor.firstName ?? 'Ziedotājs',
+      firstNameHtml: sanitize(donation.donor.firstName ?? 'Ziedotājs'),
+      lastName: donation.donor.lastName ?? 'Ziedotājs',
+      lastNameHtml: sanitize(donation.donor.lastName ?? 'Ziedotājs'),
       amount: formatAmount(donation.amount / 100),
       currency: global.currency,
     };
@@ -572,10 +564,10 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     };
 
     const data = {
-      firstName: recurringDonation.donor.firstName,
-      firstNameHtml: sanitize(recurringDonation.donor.firstName),
-      lastName: recurringDonation.donor.lastName,
-      lastNameHtml: sanitize(recurringDonation.donor.lastName),
+      firstName: donation.donor.firstName ?? 'Ziedotājs',
+      firstNameHtml: sanitize(recurringDonation.donor.firstName ?? 'Ziedotājs'),
+      lastName: recurringDonation.donor.lastName ?? 'Ziedotājs',
+      lastNameHtml: sanitize(recurringDonation.donor.lastName ?? 'Ziedotājs'),
       amount: formatAmount(recurringDonation.amount / 100),
       currency: global.currency,
     };
@@ -619,10 +611,10 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     };
 
     const data = {
-      firstName: recurringDonation.donor.firstName,
-      firstNameHtml: sanitize(recurringDonation.donor.firstName),
-      lastName: recurringDonation.donor.lastName,
-      lastNameHtml: sanitize(recurringDonation.donor.lastName),
+      firstName: donation.donor.firstName ?? 'Ziedotājs',
+      firstNameHtml: sanitize(recurringDonation.donor.firstName ?? 'Ziedotājs'),
+      lastName: recurringDonation.donor.lastName ?? 'Ziedotājs',
+      lastNameHtml: sanitize(recurringDonation.donor.lastName ?? 'Ziedotājs'),
       amount: formatAmount(recurringDonation.amount / 100),
       currency: global.currency,
     };
@@ -678,8 +670,8 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     });
 
     const data = {
-      dedicationName: donation.dedicationName,
-      donorName: `${donation.donor.firstName} ${donation.donor.lastName}`,
+      dedicationName: donation.dedicationName || 'Ziedotājs',
+      donorName: `${donation.donor.firstName || 'Ziedotājs'} ${donation.donor.lastName}`,
       amount: formatAmount(donation.amount / 100),
       currency: global.currency,
       dedicationMessage: `"${donation.dedicationMessage}"`,

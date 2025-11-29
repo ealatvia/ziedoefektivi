@@ -16,7 +16,7 @@ export default function NameInput({
         value={firstName}
         setValue={setFirstName}
         setValidity={setValidity}
-        isValid={(value) => value !== ""}
+        isValid={(value) => true}
         label={firstNameText}
         autoComplete="given-name"
         maxLength={128}
@@ -27,7 +27,7 @@ export default function NameInput({
         value={lastName}
         setValue={setLastName}
         setValidity={setValidity}
-        isValid={(value) => value !== ""}
+        isValid={(value) => true}
         label={lastNameText}
         autoComplete="family-name"
         maxLength={128}

@@ -17,6 +17,7 @@ export default function EmailInput({
       setValidity={setValidity}
       isValid={(value) => validateEmail(value)}
       label={emailText}
+      required
       autoComplete={autoComplete}
       maxLength={256}
     />
