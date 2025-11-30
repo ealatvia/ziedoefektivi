@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { at, pick } from "@/utils/object";
 import AmountChooser from "../elements/forms/AmountChooser";
 import DonationTypeChooser from "../elements/forms/DonationTypeChooser";
@@ -25,13 +25,18 @@ import PaymentMethodChooser from "../elements/forms/PaymentMethodChooser";
 import {GCEvent} from "next-goatcounter";
 import {initiateStripeCheckout} from "@/utils/stripe";
 import { makeDonationRequest } from "@/utils/strapi";
+import { facebookEvent } from "@/components/elements/FacebookPixel";
+import { useGetCookie } from "cookies-next";
 
 export default function DonationSection(props) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const getCookie = useGetCookie();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalData, setModalData] = useState({});
+
+  useEffect(() => facebookEvent('ViewContent'), [])
 
   function showModal(data) {
     setModalData(data);
@@ -131,11 +136,22 @@ export default function DonationSection(props) {
       donationData.dedicationEmail = donation.dedicationEmail;
       donationData.dedicationMessage = donation.dedicationMessage;
     }
+
+    const consent = getCookie('cookie_consent')
+    const fbc = getCookie('_fbc')
+    const fbp = getCookie('_fbp')
+    if(consent && fbc) donationData.tracking = { ...donationData.tracking, fbc }
+    if(consent && fbp) donationData.tracking = { ...donationData.tracking, fbp }
+
     return donationData;
   }
 
   const donateWithCard = async () => {
     try {
+      facebookEvent('InitiateCheckout', {
+        value: donation.amount,
+        currency: 'EUR',
+      });
       await initiateStripeCheckout(donationData());
     } catch (error) {
       showModal({

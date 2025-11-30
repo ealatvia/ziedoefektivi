@@ -4,17 +4,43 @@ const { DiscordLogger } = require("../../../utils/DiscordLogger");
 
 const { createCoreController } = require("@strapi/strapi").factories;
 const { decodeOrderToken } = require("../../../utils/montonio");
+const { trackFacebook } = require("../../../utils/trackerFacebook");
+
+const IS_PROD = process.env.NODE_ENV === 'production'
 
 module.exports = createCoreController(
   "api::donation.donation",
   ({ strapi }) => ({
     async donate(ctx) {
-      const donation = ctx.request.body;
-
+      /**
+       * @type {{amount: number,type: 'onetime' | 'recurring',firstName?: string,lastName?: string,email: string,idCode?: string,amounts: Record<string, number>,paymentMethod: 'paymentInitiation'|'cardPayments',stripePaymentIntentId?: string, stripeSubscriptionId?: string, tracking?: {fbc?: string, fbp?: string}}} body
+       */
+      const body = ctx.request.body
       try {
         const { redirectURL } = await strapi
           .service("api::donation.donation")
-          .createDonation(donation);
+          .createDonation(body);
+
+        if(body.tracking?.fbc || body.tracking?.fbp) {
+          trackFacebook(strapi, {
+            event_name: body.stripeSubscriptionId ? 'Subscribe' : 'Purchase',
+            event_id: body.stripeSubscriptionId ?? body.stripePaymentIntentId,
+            event_time: Math.floor(Date.now() / 1000),
+            user_data: {
+              ...(body.tracking?.fbc ? {fbc: body.tracking?.fbc} : {}),
+              ...(body.tracking?.fbp ? {fbp: body.tracking?.fbp} : {}),
+            },
+            custom_data: {
+              currency: 'EUR',
+              value: (body.amount / 100).toString(),
+              ...(body.stripeSubscriptionId ? {predicted_ltv: (body.amount * 24).toString()} : {}),
+            },
+            event_source_url: ctx.request.href,
+            action_source: 'system_generated',
+            opt_out: !IS_PROD,
+          });
+        }
+
         return ctx.send({ redirectURL });
       } catch (error) {
         DiscordLogger.singleton.error(error);

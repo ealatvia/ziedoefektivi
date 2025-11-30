@@ -1243,6 +1243,8 @@ export interface ApiGlobalGlobal extends Schema.SingleType {
     tipOrganizationId: Attribute.Integer;
     externalOrganizationId: Attribute.Integer;
     goatcounterId: Attribute.String;
+    facebookPixelId: Attribute.String;
+    facebookAccessToken: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<

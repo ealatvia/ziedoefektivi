@@ -5,6 +5,9 @@ import { GCScript } from "next-goatcounter";
 import "@fontsource-variable/inter/opsz-italic.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import CookieBanner from "@/components/elements/CookieBanner";
+import { CookiesNextProvider } from "cookies-next";
+import { FacebookPixel } from "@/components/elements/FacebookPixel";
 
 export async function generateMetadata() {
   const global = await getGlobal();
@@ -17,16 +20,22 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="lv" className="h-full">
-      {global.goatcounterId && (
+      <CookiesNextProvider pollingOptions={{ enabled: true, intervalMs: 1000 }}>
         <head>
-          <GCScript siteUrl={`https://${global.goatcounterId}.goatcounter.com/count`} />
+          {global.goatcounterId && (
+            <GCScript siteUrl={`https://${global.goatcounterId}.goatcounter.com/count`} />
+          )}
+          {global.facebookPixelId && (
+            <FacebookPixel pixelId={global.facebookPixelId} />
+          )}
         </head>
-      )}
-      <body className="flex min-h-full flex-col">
-        <Navbar global={global} />
+        <body className="flex min-h-full flex-col">
+          <Navbar global={global} />
           {children}
-        <Footer global={global} />
-      </body>
+          <Footer global={global} />
+          <CookieBanner facebookPixelId={global.trackersFacebookPixelId} />
+        </body>
+      </CookiesNextProvider>
     </html>
   );
 }

@@ -53,6 +53,8 @@ export async function POST(request) {
                     dedicationEmail: data.dedicationEmail,
                     dedicationMessage: data.dedicationMessage,
                 }),
+                ...(data.tracking?.fbc && {fbc: data.tracking?.fbc}),
+                ...(data.tracking?.fbp && {fbp: data.tracking?.fbp}),
             },
         });
 

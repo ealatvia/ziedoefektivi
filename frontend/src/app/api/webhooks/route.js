@@ -46,6 +46,10 @@ export async function POST(request) {
                 companyName: metadata.companyName,
                 stripePaymentIntentId: payment_intent,
                 stripeSubscriptionId: subscription,
+                tracking: {
+                    fbc: metadata.fbc,
+                    fbp: metadata.fbp,
+                },
                 finalized: true, // Event "checkout.session.completed" implies the payment is finalized.
             };
 

@@ -120,6 +120,12 @@
     },
     "goatcounterId": {
       "type": "string"
+    },
+    "facebookPixelId": {
+      "type": "string"
+    },
+    "facebookAccessToken": {
+      "type": "string"
     }
   }
 }
