@@ -13,19 +13,18 @@ export async function generateMetadata() {
 }
 
 export default async function RootLayout({ children }) {
-  const goatCounterCode = process.env.GOATCOUNTER_CODE;
   const global = await getGlobal();
 
   return (
     <html lang="lv" className="h-full">
-      {goatCounterCode && (
+      {global.goatcounterId && (
         <head>
-          <GCScript siteUrl={`https://${goatCounterCode}.goatcounter.com/count`} />
+          <GCScript siteUrl={`https://${global.goatcounterId}.goatcounter.com/count`} />
         </head>
       )}
       <body className="flex min-h-full flex-col">
         <Navbar global={global} />
-        {children}
+          {children}
         <Footer global={global} />
       </body>
     </html>
