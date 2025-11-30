@@ -30,11 +30,14 @@ export default function CookieBannerInner() {
 
   return (
     <aside>
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-900 text-white p-4 z-50 flex justify-between items-center">
-      <p>Mēs izmantojam sīkdatnes, lai uzlabotu jūsu pieredzi un mērītu reklāmas efektivitāti.</p>
+      <div className="fixed bottom-0 left-0 right-0 bg-cyan-900 text-white p-4 z-50 flex justify-between items-center">
+      <p>
+        Šajā vietnē tiek izmantotas statistikas un mārketinga sīkdatnes.
+        Uzzini vairāk <a href='/privatuma-politika' className='text-teal-400'>Privātuma politikā</a>.
+      </p>
       <div className="space-x-4">
-        <button onClick={handleDecline} className="px-4 py-2 text-sm text-gray-300 hover:text-white">Noraidīt</button>
-        <button onClick={handleAccept} className="bg-green-600 px-4 py-2 rounded text-white font-bold">Piekrītu</button>
+        <button onClick={handleDecline} className="px-4 py-2 text-gray-200 hover:text-white font-bold">Noraidīt</button>
+        <button onClick={handleAccept} className="bg-teal-700 px-4 py-2 rounded text-white font-bold">Apstiprināt</button>
       </div>
       </div>
     </aside>
