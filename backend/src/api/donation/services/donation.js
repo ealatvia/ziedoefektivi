@@ -564,7 +564,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     };
 
     const data = {
-      firstName: donation.donor.firstName ?? 'Ziedotājs',
+      firstName: recurringDonation.donor.firstName ?? 'Ziedotājs',
       firstNameHtml: sanitize(recurringDonation.donor.firstName ?? 'Ziedotājs'),
       lastName: recurringDonation.donor.lastName ?? 'Ziedotājs',
       lastNameHtml: sanitize(recurringDonation.donor.lastName ?? 'Ziedotājs'),
