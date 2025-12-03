@@ -158,26 +158,6 @@ export default function Results({ income, evaluations }) {
                   animated={false}
                 />
               </div>
-              <div className="text-xl text-center">
-                ... Tavi ienākumi joprojām būtu{" "}
-                <span className="font-bold tracking-tight text-primary-700">
-                  {formatNumber(
-                    round(afterDonating.timesRicherThanMedian, 1)
-                  )}{" "}
-                  reizes lielāki
-                </span>{" "}
-                par pasaules vidējo rādītāju.
-              </div>
-              <div className="flex flex-col space-y-8">
-                <div className="w-80 h-64 sm:w-96 sm:h-80 md:h-96 md:w-144">
-                  <ResultBarChart
-                    medianIncome={afterDonating.medianIncome}
-                    internationalizedIncome={
-                      afterDonating.internationalizedIncome
-                    }
-                  />
-                </div>
-              </div>
               <HorizontalRule />
               <h2 className="text-xl text-center">
                 Katru gadu Tavs{" "}
