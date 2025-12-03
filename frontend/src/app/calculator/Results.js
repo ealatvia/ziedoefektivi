@@ -104,7 +104,7 @@ export default function Results({ income, evaluations }) {
             <span className="font-bold tracking-tight text-primary-700">
               {formatNumber(round(timesRicherThanMedian, 1))} reizes lielāki
             </span>{" "}
-            par pasaules mediānu.
+            par pasaules <span class="info-term" tabindex="0" aria-describedby="tip1">mediānu<span id="tip1" role="tooltip" class="tooltip">Vērtība, virs kuras atrodas 50% no cilvēku ienākumiem</span></span>.
           </h2>
           <div className="flex flex-col space-y-8">
             <div className="w-80 h-64 sm:w-96 sm:h-80 md:h-96 md:w-144">

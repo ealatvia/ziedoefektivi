@@ -78,3 +78,64 @@ body {
 .form-range::-webkit-slider-thumb:active {
   cursor: grabbing;
 }
+
+  .info-term {
+    position: relative;
+    cursor: help;
+    border-bottom: 1px dashed #333;    /* dashed underline */
+    text-decoration: none;
+    outline: none;                      /* we'll show focus style ourselves */
+  }
+
+  /* make it focusable and visible on keyboard */
+  .info-term:focus {
+    box-shadow: 0 0 0 3px rgba(80,161,158,0.12);
+    border-radius: 2px;
+  }
+
+  .tooltip {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);   /* place above the word with a gap */
+    transform: translateX(-50%);
+    white-space: normal;
+    min-width: 160px;
+    max-width: 320px;
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.12);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    border-radius: 6px;
+    opacity: 0;
+    pointer-events: none; /* don't block mouse events when hidden */
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 20;
+  }
+
+  /* little caret */
+  .tooltip::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(0,0,0,0.12);
+  }
+
+  /* show tooltip on hover or focus */
+  .info-term:hover .tooltip,
+  .info-term:focus .tooltip,
+  .info-term:focus-within .tooltip {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(-4px);
+  }
+
+  /* small responsive tweak so tooltip doesn't run off screen */
+  @media (max-width: 420px) {
+    .tooltip { left: 0; transform: translateX(0); bottom: calc(100% + 6px); }
+    .tooltip::after { left: 10px; transform: none; }
+  }
