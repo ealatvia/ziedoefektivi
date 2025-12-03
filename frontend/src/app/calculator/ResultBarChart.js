@@ -38,7 +38,7 @@ export default function ResultBarChart({
       income: medianIncome,
     },
     {
-      name: "Jūsu ienākumi",
+      name: "Tavi ienākumi",
       income: internationalizedIncome,
     },
   ];

@@ -14,7 +14,7 @@ export default function ShareButtons() {
         <FacebookShareButton buttonText="Facebook" url={url} />
         <TwitterShareButton
           buttonText="Twitter"
-          tweet="Kādi ir jūsu ienākumi salīdzinājumā ar pārējo pasauli?"
+          tweet="Kādi ir Tavi ienākumi salīdzinājumā ar pārējo pasauli?"
           hashtags={["ziedoefektivi", "kalkulators"]}
           url={url}
         />

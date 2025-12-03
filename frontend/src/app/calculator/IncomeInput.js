@@ -113,7 +113,7 @@ export default function IncomeInput({ submitIncome }) {
         </button>
       </div>
       <p className="text-center text-sm">
-        Mēs nesaglabājam Jūsu ievadīto informāciju.
+        Mēs nesaglabājam Tevis ievadīto informāciju.
       </p>
     </form>
   );

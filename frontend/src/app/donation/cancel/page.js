@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 
 export default function CancelPage({
     title = "Ziedojums atcelts",
-    description = "Jūsu ziedojums tika atcelts un maksājums netika apstrādāts.",
+    description = "Tavs ziedojums tika atcelts un maksājums netika apstrādāts.",
     returnText = "Atpakaļ"
 }) {
     const router = useRouter();

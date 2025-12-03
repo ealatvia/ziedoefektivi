@@ -76,7 +76,7 @@ export default function Results({ income, evaluations }) {
     >
       <HorizontalRule />
       <h2 className="text-2xl text-center">
-        Jūs esat starp{" "}
+        Tu esi starp{" "}
         <span className="font-bold tracking-tight text-primary-700">
           {topPercentile <= 1 && "<"}
           {topPercentile >= 99 && ">"}
@@ -88,7 +88,7 @@ export default function Results({ income, evaluations }) {
         <ResultPieChart percentile={percentile} topPercentile={topPercentile} />
       </div>
       <div className="text-xl text-center">
-      Jūs esat bagātāks par{" "}
+      Tu esi bagātāks par{" "}
         <span className="font-bold tracking-tight text-primary-700">
           {percentile >= 99 && ">"}
           {percentile <= 1 && "<"}
@@ -100,7 +100,7 @@ export default function Results({ income, evaluations }) {
         <>
           <HorizontalRule />
           <h2 className="text-xl text-center">
-          Jūsu ienākumi ir{" "}
+          Tavi ienākumi ir{" "}
             <span className="font-bold tracking-tight text-primary-700">
               {formatNumber(round(timesRicherThanMedian, 1))} reizes lielāki
             </span>{" "}
@@ -131,7 +131,7 @@ export default function Results({ income, evaluations }) {
             <>
               <HorizontalRule />
               <h2 className="text-xl text-center">
-                Ja Jūs ziedotu{" "}
+                Ja Tu ziedotu{" "}
                 <span className="font-bold tracking-tight text-primary-700">
                   {donationPercentage}%
                 </span>{" "}
@@ -145,7 +145,7 @@ export default function Results({ income, evaluations }) {
               />
               <HorizontalRule />
               <h2 className="text-xl text-center">
-                ... Jūs joprojām būtu starp{" "}
+                ... Tu joprojām būtu starp{" "}
                 <span className="font-bold tracking-tight text-primary-700">
                   {formatNumber(afterDonating.topPercentile)}%
                 </span>{" "}
@@ -159,7 +159,7 @@ export default function Results({ income, evaluations }) {
                 />
               </div>
               <div className="text-xl text-center">
-                ... Jūsu ienākumi joprojām būtu{" "}
+                ... Tavi ienākumi joprojām būtu{" "}
                 <span className="font-bold tracking-tight text-primary-700">
                   {formatNumber(
                     round(afterDonating.timesRicherThanMedian, 1)
@@ -180,7 +180,7 @@ export default function Results({ income, evaluations }) {
               </div>
               <HorizontalRule />
               <h2 className="text-xl text-center">
-                Katru gadu Jūsu{" "}
+                Katru gadu Tavs{" "}
                 <span className="font-bold tracking-tight text-primary-700">
                   {formatNumber(roundMoney(yearlyDonation))} €
                 </span>{" "}
@@ -188,7 +188,7 @@ export default function Results({ income, evaluations }) {
               </h2>
               <Impact evaluations={evaluations} donation={yearlyDonation} />
               <div className="text-xl text-center">
-                ... ja Jūs ziedotu pasaules efektīvākajām labdarības organizācijām.
+                ... ja Tu ziedotu pasaules efektīvākajām labdarības organizācijām.
               </div>
             </>
           )}
