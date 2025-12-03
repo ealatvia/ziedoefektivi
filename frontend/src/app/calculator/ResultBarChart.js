@@ -34,7 +34,7 @@ export default function ResultBarChart({
 }) {
   const data = [
     {
-      name: "Mediānas ienākumi",
+      name: "Ienākumu mediāna",
       income: medianIncome,
     },
     {
