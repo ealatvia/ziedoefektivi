@@ -14,7 +14,7 @@ export default function Footer({ global }) {
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           <div className="flex flex-col gap-8 items-start px-3">
             <Image className="w-auto h-8" data={footer.logo} />
-            <p className="text-sm leading-6 text-teal-100">{footer.text}</p>
+            <p className="text-sm leading-6 text-teal-100" style={{"white-space": "pre-line;"}}>{footer.text}</p>
             <div className="flex gap-4">
               {footer.socialMediaLinks.map((socialMediaLink) => (
                 <Button
