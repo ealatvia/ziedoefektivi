@@ -68,7 +68,7 @@ export default function DonationSection(props) {
 
   const [donation, setDonation] = useState({
     amount: amountOptions[1].value,
-    type: typeParam === "recurring" ? "recurring" : "onetime",
+    type: typeParam === "onetime" ? "onetime" : "recurring",
     firstName: "",
     lastName: "",
     email: "",
