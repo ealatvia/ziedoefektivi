@@ -60,6 +60,9 @@
     "otherAmountOptionText": {
       "type": "string"
     },
+    "perMonthText": {
+      "type": "string"
+    },
     "donationTypeText": {
       "type": "string"
     },

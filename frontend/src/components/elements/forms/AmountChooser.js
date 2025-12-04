@@ -60,7 +60,7 @@ function AmountChooserOption({ value, label }) {
             ? "border-primary-600 ring-1 ring-primary-600"
             : "border-slate-300",
           active ? "bg-primary-50" : "",
-          "relative flex cursor-pointer justify-center rounded-lg border p-3 text-slate-900 shadow-sm focus:outline-none",
+          "relative flex cursor-pointer justify-center items-center rounded-lg border p-2 text-slate-900 shadow-sm focus:outline-none",
         )
       }
     >
@@ -76,6 +76,7 @@ export default function AmountChooser({
   amountOptions,
   otherAmountText,
   otherAmountOptionText,
+  perMonthText,
   currency,
   setValidity,
 }) {
@@ -96,12 +97,12 @@ export default function AmountChooser({
     <div className="flex flex-col gap-4">
       <RadioGroup value={selectedAmount} onChange={setSelectedAmount}>
         <RadioGroup.Label className="sr-only">{amountText}</RadioGroup.Label>
-        <div className="grid grid-cols-4 gap-3 xs:gap-4">
+        <div className="grid grid-cols-4 gap-4 xs:gap-4">
           {amountOptions.map((amountOption) => (
             <AmountChooserOption
               key={amountOption.value}
               value={amountOption.value}
-              label={amountOption.label}
+              label={amountOption.label+(perMonthText ?? '')}
             />
           ))}
           <AmountChooserOption value="other" label={otherAmountOptionText} />
@@ -111,7 +112,7 @@ export default function AmountChooser({
         <AmountInput
           amount={amount ? amount : ""}
           setAmount={setAmount}
-          currency={currency}
+          currency={currency+(perMonthText ?? '')}
           label={otherAmountText}
           setValidity={setValidity}
         />

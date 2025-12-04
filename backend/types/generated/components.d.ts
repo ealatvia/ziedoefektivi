@@ -297,6 +297,7 @@ export interface SectionsDonationSection extends Schema.Component {
     termsText: Attribute.RichText;
     chooseAmountText: Attribute.String;
     otherAmountOptionText: Attribute.String;
+    perMonthText: Attribute.String;
     donationTypeText: Attribute.String;
     stepText: Attribute.String;
     backButtonText: Attribute.String;

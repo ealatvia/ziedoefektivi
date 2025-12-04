@@ -220,6 +220,7 @@ export default function DonationSection(props) {
                 amountOptions={amountOptions}
                 otherAmountText={props.otherAmountText}
                 otherAmountOptionText={props.otherAmountOptionText}
+                perMonthText={donation.type === 'recurring' ? props.perMonthText : ''}
                 currency={props.global.currency}
                 setValidity={setValidity}
               />
