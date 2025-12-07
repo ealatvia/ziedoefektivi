@@ -7,6 +7,9 @@ export function getStrapiURL(path = "") {
   }${path}`;
 }
 
+/**
+ * @returns {object | null}
+ */
 export async function fetchAPI(path, urlParamsObject = {}, options = {}) {
   try {
     const token = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN;
@@ -33,16 +36,19 @@ export async function fetchAPI(path, urlParamsObject = {}, options = {}) {
     )}`;
 
     // Trigger API call
-    if(!requestUrl.includes('populate=deep')) console.log(requestUrl, mergedOptions)
     const response = await fetch(requestUrl, mergedOptions);
-    const data = await response.json();
-    if(!requestUrl.includes('populate=deep')) console.log(response, data)
-    return data;
+    if(!response.ok) {
+      const error = new Error('ServerError')
+      error.response = response
+      throw error
+    }
+    if(response.headers.get('content-type')?.includes('application/json')) {
+      return await response.json();
+    }
+    return null
   } catch (error) {
     console.error(error);
-    throw new Error(
-      "Please check if your server is running and you set all the required tokens.",
-    );
+    throw error;
   }
 }
 
@@ -53,10 +59,10 @@ export async function getPageBySlug(slug) {
     populate: "deep",
   };
 
-  const response = await fetchAPI(path, urlParamsObject);
+  const data = await fetchAPI(path, urlParamsObject);
 
   try {
-    return response.data[0].attributes;
+    return data.data[0].attributes;
   } catch (error) {
     notFound();
   }
@@ -66,22 +72,22 @@ export async function getGlobal() {
   const path = "/global";
   const urlParamsObject = { populate: "deep" };
 
-  const response = await fetchAPI(path, urlParamsObject);
+  const data = await fetchAPI(path, urlParamsObject);
 
-  if (response == null || response.data == null) {
-    console.error("Missing data.attributes from response: " + JSON.stringify(response));
+  if (data == null || data.data == null) {
+    console.error("Missing data.attributes from response: " + JSON.stringify(data));
     return null;
   }
-  return response.data.attributes;
+  return data.data.attributes;
 }
 
 export async function getSpecialPages() {
   const path = "/special-pages";
   const urlParamsObject = { populate: "deep,3" };
 
-  const response = await fetchAPI(path, urlParamsObject);
+  const data = await fetchAPI(path, urlParamsObject);
 
-  const specialPages = response.data.map(({ attributes }) => attributes);
+  const specialPages = data.data.map(({ attributes }) => attributes);
 
   return specialPages;
 }
@@ -114,8 +120,8 @@ export async function getEntityBySlug(type, slug) {
     populate: "deep,3",
   };
 
-  const response = await fetchAPI(path, urlParamsObject);
-  const { attributes, id } = response.data[0];
+  const data = await fetchAPI(path, urlParamsObject);
+  const { attributes, id } = data.data[0];
 
   try {
     return { ...attributes, id };
@@ -128,12 +134,12 @@ export async function getAllSlugs() {
   const pagesPath = "/pages";
   const urlParamsObject = { populate: "deep,2" };
 
-  const pagesResponse = await fetchAPI(pagesPath, urlParamsObject);
-  const pageSlugs = pagesResponse.data.map(({ attributes }) => attributes.slug);
+  const pagesData = await fetchAPI(pagesPath, urlParamsObject);
+  const pageSlugs = pagesData.data.map(({ attributes }) => attributes.slug);
 
   const causesPath = "/causes";
-  const causesResponse = await fetchAPI(causesPath, urlParamsObject);
-  const causes = causesResponse.data.map(({ attributes }) => attributes);
+  const causesData = await fetchAPI(causesPath, urlParamsObject);
+  const causes = causesData.data.map(({ attributes }) => attributes);
   const causeSlugs = causes.map((cause) => cause.slug);
 
   const organizationSlugs = causes
@@ -164,9 +170,9 @@ export async function getBlogPosts() {
   const path = "/blog-posts";
   const urlParamsObject = { populate: "deep,2", sort: "date:desc" };
 
-  const response = await fetchAPI(path, urlParamsObject);
+  const data = await fetchAPI(path, urlParamsObject);
 
-  const blogPosts = response.data.map(({ attributes }) => attributes);
+  const blogPosts = data.data.map(({ attributes }) => attributes);
 
   return blogPosts;
 }
@@ -196,9 +202,9 @@ export async function getOrganizations() {
     },
   };
 
-  const response = await fetchAPI(path, urlParamsObject);
+  const data = await fetchAPI(path, urlParamsObject);
 
-  const organizations = response.data.map(({ id, attributes }) => {
+  const organizations = data.data.map(({ id, attributes }) => {
     return { ...attributes, id };
   });
 

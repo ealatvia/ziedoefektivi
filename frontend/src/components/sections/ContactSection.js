@@ -21,20 +21,19 @@ export default function ContactSection(props) {
   const ready = data.name && data.email && data.message;
 
   const submit = async () => {
-    const response = await fetchAPI("/contact", {}, {
-      body: JSON.stringify(data),
-    });
-
-    if (response.ok) {
+    try {
+      await fetchAPI("/contact", {}, {
+        body: JSON.stringify(data),
+      });
       setData({});
       showModal({
         icon: "success",
         title: props.successTitle,
         description: props.successDescription,
       });
-    } else {
+    } catch(error) {
       let errorMessage;
-      const responseText = await response.text();
+      const responseText = await error.response?.text();
       try {
         const responseData = JSON.parse(responseText);
         errorMessage = `${responseData.error.name}: ${responseData.error.message}`;
