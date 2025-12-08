@@ -23,8 +23,8 @@ module.exports = createCoreController(
 
         if(body.tracking?.fbc || body.tracking?.fbp) {
           trackFacebook(strapi, {
-            event_name: body.stripeSubscriptionId ? 'Subscribe' : 'Purchase',
-            event_id: body.stripeSubscriptionId ?? body.stripePaymentIntentId,
+            event_name: 'Purchase',
+            event_id: body.stripePaymentIntentId,
             event_time: Math.floor(Date.now() / 1000),
             user_data: {
               ...(body.tracking?.fbc ? {fbc: body.tracking?.fbc} : {}),
@@ -32,13 +32,31 @@ module.exports = createCoreController(
             },
             custom_data: {
               currency: 'EUR',
-              value: (body.amount / 100).toString(),
-              ...(body.stripeSubscriptionId ? {predicted_ltv: (body.amount * 24).toString()} : {}),
+              value: (body.amount * (body.stripeSubscriptionId ? 36 : 1) / 100).toString(),
             },
             event_source_url: ctx.request.href,
             action_source: 'system_generated',
             opt_out: !IS_PROD,
           });
+          if(body.stripeSubscriptionId) {
+            trackFacebook(strapi, {
+              event_name: 'Subscribe',
+              event_id: body.stripeSubscriptionId,
+              event_time: Math.floor(Date.now() / 1000),
+              user_data: {
+                ...(body.tracking?.fbc ? {fbc: body.tracking?.fbc} : {}),
+                ...(body.tracking?.fbp ? {fbp: body.tracking?.fbp} : {}),
+              },
+              custom_data: {
+                currency: 'EUR',
+                value: (body.amount / 100).toString(),
+                predicted_ltv: (body.amount * 36).toString(),
+              },
+              event_source_url: ctx.request.href,
+              action_source: 'system_generated',
+              opt_out: !IS_PROD,
+            });
+          }
         }
 
         return ctx.send({ redirectURL });
