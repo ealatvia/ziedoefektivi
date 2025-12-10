@@ -3,8 +3,10 @@ import PIP_GLOBAL_PERCENTILES from "../data/pip_global_percentiles.json";
 
 import { range } from "./utils";
 
-// https://github.com/owid/notebooks/blob/main/PabloArriagada/global_distribution_giving_what_we_can/wdi_ppp.csv
-const LATVIA_PPP = 0.6738879961021667;
+// replicating GWWC calculator on 2025.12.10:
+// for PPP factor:              https://github.com/owid/notebooks/blob/main/PabloArriagada/global_distribution_giving_what_we_can/API_PA.NUS.PRVT.PP_DS2_en_csv_v2_5762.csv
+// for inflation adjustments:   https://github.com/owid/notebooks/blob/main/PabloArriagada/global_distribution_giving_what_we_can/wdi_ppp.csv
+const LATVIA_PPP = 0.520726*156.524444429468/120.949398596532;
 
 const DAYS_PER_YEAR = 365.2425;
 const DAYS_PER_MONTH = DAYS_PER_YEAR / 12;
