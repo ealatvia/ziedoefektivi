@@ -9,7 +9,7 @@ export default function TestimonialsSection({ title, testimonials }) {
           {title}
         </h2>
         <div className="mx-auto flow-root">
-          <div className="-mt-6 flex flex-col items-center md:block md:columns-2 md:gap-6">
+          <div className="-mt-6 flex flex-row items-center md:block md:columns-2 md:gap-6">
             {testimonials.map((testimonial) => (
               <figure
                 key={testimonial.id}
