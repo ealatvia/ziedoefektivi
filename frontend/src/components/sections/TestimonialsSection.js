@@ -13,7 +13,7 @@ export default function TestimonialsSection({ title, testimonials }) {
             {testimonials.map((testimonial) => (
               <figure
                 key={testimonial.id}
-                className="mt-4 flex flex-row gap-6 bg-cyan-100 p-6 text-sm leading-6 sm:mt-6 sm:inline-flex sm:rounded-2xl md:p-8"
+                className="mt-4 flex flex-col gap-6 bg-cyan-100 p-6 text-sm leading-6 sm:mt-6 sm:inline-flex sm:rounded-2xl md:p-8"
               >
                 <blockquote>
                   <Markdown className="prose prose-sm prose-primary w-full">
