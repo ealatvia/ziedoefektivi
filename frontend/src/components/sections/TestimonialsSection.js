@@ -9,11 +9,11 @@ export default function TestimonialsSection({ title, testimonials }) {
           {title}
         </h2>
         <div className="mx-auto flow-root">
-          <div className="-mt-6 flex flex-row items-center md:block md:columns-2 md:gap-6">
+          <div className="-mt-6 flex flex-col items-center md:block md:columns-2 md:gap-6">
             {testimonials.map((testimonial) => (
               <figure
                 key={testimonial.id}
-                className="mt-4 flex flex-col gap-6 bg-cyan-100 p-6 text-sm leading-6 sm:mt-6 sm:inline-flex sm:rounded-2xl md:p-8"
+                className="mt-4 flex flex-row gap-6 bg-cyan-100 p-6 text-sm leading-6 sm:mt-6 sm:inline-flex sm:rounded-2xl md:p-8"
               >
                 <blockquote>
                   <Markdown className="prose prose-sm prose-primary w-full">
