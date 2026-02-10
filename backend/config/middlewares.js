@@ -12,7 +12,6 @@ module.exports = [
             "'self'",
             "data:",
             "blob:",
-            "res.cloudinary.com", // TODO: remove after clearing data from cloudinary links.
             "splendid-sunshine-fb3754d635.strapiapp.com",
             "http://127.0.0.1:1337",
             "http://localhost:1337"
@@ -21,7 +20,6 @@ module.exports = [
             "'self'",
             "data:",
             "blob:",
-            "res.cloudinary.com", // TODO: remove after clearing data from cloudinary links.
             "splendid-sunshine-fb3754d635.strapiapp.com",
             "http://127.0.0.1:1337",
             "http://localhost:1337"
