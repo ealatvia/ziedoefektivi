@@ -996,7 +996,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
 
     return {
       periodFrom: from.toISOString(),
-      periodTo: from.toISOString(),
+      periodTo: to.toISOString(),
       periodTotal,
       periodTotalAmountByOrganization,
       periodTotalAmountByDonor,
