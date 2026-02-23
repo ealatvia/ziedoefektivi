@@ -21,14 +21,14 @@ module.exports = createCoreController(
           .service("api::donation.donation")
           .createDonation(body);
 
-        if(body.tracking?.fbc || body.tracking?.fbp) {
+        if (body.tracking?.fbc || body.tracking?.fbp) {
           trackFacebook(strapi, {
             event_name: 'Purchase',
             event_id: body.stripePaymentIntentId,
             event_time: Math.floor(Date.now() / 1000),
             user_data: {
-              ...(body.tracking?.fbc ? {fbc: body.tracking?.fbc} : {}),
-              ...(body.tracking?.fbp ? {fbp: body.tracking?.fbp} : {}),
+              ...(body.tracking?.fbc ? { fbc: body.tracking?.fbc } : {}),
+              ...(body.tracking?.fbp ? { fbp: body.tracking?.fbp } : {}),
             },
             custom_data: {
               currency: 'EUR',
@@ -38,14 +38,14 @@ module.exports = createCoreController(
             action_source: 'system_generated',
             opt_out: !IS_PROD,
           });
-          if(body.stripeSubscriptionId) {
+          if (body.stripeSubscriptionId) {
             trackFacebook(strapi, {
               event_name: 'Subscribe',
               event_id: body.stripeSubscriptionId,
               event_time: Math.floor(Date.now() / 1000),
               user_data: {
-                ...(body.tracking?.fbc ? {fbc: body.tracking?.fbc} : {}),
-                ...(body.tracking?.fbp ? {fbp: body.tracking?.fbp} : {}),
+                ...(body.tracking?.fbc ? { fbc: body.tracking?.fbc } : {}),
+                ...(body.tracking?.fbp ? { fbp: body.tracking?.fbp } : {}),
               },
               custom_data: {
                 currency: 'EUR',
@@ -99,7 +99,7 @@ module.exports = createCoreController(
         ...ctx.request.body,
         comment: `Return URL: ${returnUrl}`,
         // External donations always go to the specified organization
-        amounts: {[global.externalOrganizationId]: ctx.request.body.amount},
+        amounts: { [global.externalOrganizationId]: ctx.request.body.amount },
       };
 
       try {
@@ -327,7 +327,7 @@ module.exports = createCoreController(
         /**
          * @type {Pick<import("stripe").Stripe.Dispute, 'id'|'created'|'payment_intent'}
          */
-        const {id, payment_intent, created} = ctx.request.body;
+        const { id, payment_intent, created } = ctx.request.body;
         await strapi
           .service("api::donation.donation")
           .disputeDonation(payment_intent, id, new Date(created * 1000));

@@ -275,7 +275,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
 
     // Card payments via Stripe - handled by separate webhook, return empty redirect
     if (donation.paymentMethod === "cardPayments") {
-      await DiscordLogger.singleton.logDonation({...donation, donationId: donationEntry.id});
+      await DiscordLogger.singleton.logDonation({ ...donation, donationId: donationEntry.id });
       await this.sendConfirmationEmail(donationEntry.id)
       return { redirectURL: "" };
     }
@@ -1123,7 +1123,8 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
     await strapi.entityService.update("api::donation.donation", donation.id, {
       data: {
         finalized: false,
-        comment: [donation.comment,
+        comment: [
+          donation.comment,
           `Dispute ID: ${disputeId}`,
           `Dispute created: ${createdAt.toISOString()}`,
           `Dispute TODO: please resolve dispute manually. Even if you win, consider this donation never happened and handle recovered funds manually.`
