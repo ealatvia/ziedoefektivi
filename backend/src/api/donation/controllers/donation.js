@@ -67,9 +67,9 @@ module.exports = createCoreController(
     },
 
     async donateStripeRecurring(ctx) { // Stripe specific
-    /**
-     * @type {Pick<import("stripe").Stripe.Invoice, 'subscription'|'payment_intent'|'created'|'amount_paid'>}
-     */
+      /**
+       * @type {Pick<import("stripe").Stripe.Invoice, 'subscription'|'payment_intent'|'created'|'amount_paid'>}
+       */
       const { subscription, payment_intent, created, amount_paid } = ctx.request.body;
 
       try {
@@ -230,6 +230,14 @@ module.exports = createCoreController(
       const fullData = await strapi.service("api::donation.donation").export();
 
       return ctx.send(fullData);
+    },
+
+    async report(ctx) {
+      const { from, to } = ctx.request.query;
+
+      const report = await strapi.service("api::donation.donation").report(new Date(from), new Date(to));
+
+      return ctx.send(report);
     },
 
     async deleteAll(ctx) {

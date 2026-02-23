@@ -36,6 +36,11 @@ module.exports = {
       handler: "donation.export",
     },
     {
+      method: "GET",
+      path: "/donations/report",
+      handler: "donation.report",
+    },
+    {
       method: "POST",
       path: "/donations/deleteAll",
       handler: "donation.deleteAll",

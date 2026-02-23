@@ -352,14 +352,14 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
         donation.bank === "other"
           ? ""
           : createRecurringPaymentLink(
-              donation.bank,
-              {
-                iban: donationInfo.iban,
-                recipient: donationInfo.recipient,
-                description,
-              },
-              donation.amount / 100
-            );
+            donation.bank,
+            {
+              iban: donationInfo.iban,
+              recipient: donationInfo.recipient,
+              description,
+            },
+            donation.amount / 100
+          );
 
       setTimeout(() => {
         if (externalDonation) {
@@ -763,7 +763,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
           data: {
             recurringDonation:
               recurringDonationMap[
-                organizationRecurringDonation.recurringDonation
+              organizationRecurringDonation.recurringDonation
               ],
             organization:
               organizationMap[organizationRecurringDonation.organization],
@@ -872,7 +872,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       )
     ).map((organizationRecurringDonation) => ({
       ...organizationRecurringDonation,
-      recurringDonation: organizationRecurringDonation.recurringDonation.id,
+      recurringDonation: organizationRecurringDonation.recurringDonation?.id,
       organization: organizationRecurringDonation.organization.id,
     }));
 
@@ -902,7 +902,7 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       )
     ).map((organizationDonation) => ({
       ...organizationDonation,
-      donation: organizationDonation.donation.id,
+      donation: organizationDonation.donation?.id,
       organization: organizationDonation.organization.id,
     }));
 
@@ -929,6 +929,88 @@ module.exports = createCoreService("api::donation.donation", ({ strapi }) => ({
       organizationDonations,
       donationTransfers,
     };
+  },
+
+  /**
+   *
+   * @param {Date} from
+   * @param {Date} to
+   */
+  async report(from, to) {
+    console.log(from, to)
+
+    const donations = (
+      await strapi.entityService.findMany("api::donation.donation", {
+        sort: "id",
+        populate: ["donor", "recurringDonation", "organizationDonations", "organizationDonations.organization"],
+        filters: {
+          finalized: true,
+          datetime: {
+            $gte: from,
+            $lte: to,
+          },
+        },
+      })
+    );
+
+    const arrayToMap = (totals, { key, amount }) => {
+      totals[key] = (totals[key] ?? 0) + amount
+      return totals
+    }
+    const sortAmountZA = (a, b) => b.amount - a.amount
+
+    const periodTotal = donations
+      .reduce((sum, { amount }) => sum + amount, 0);
+    const periodTotalAmountByOrganization = donations
+      .flatMap((donation) => donation.organizationDonations.map(({ organization, amount }) => ({ key: organization.slug, amount })))
+      .sort(sortAmountZA)
+      .reduce(arrayToMap, {});
+    const periodTotalAmountByDonor = donations
+      .map((donation) => ({ key: donation.donor.email, amount: donation.amount }))
+      .sort(sortAmountZA)
+      .reduce(arrayToMap, {});
+    const periodTotalAmountByType = donations
+      .map((donation) => ({ key: !!donation.recurringDonation ? 'recurring' : 'oneoff', amount: donation.amount }))
+      .sort(sortAmountZA)
+      .reduce(arrayToMap, {});
+
+    const recurringDonations = await strapi.entityService.findMany("api::recurring-donation.recurring-donation", {
+      populate: ["organizationRecurringDonations", "organizationRecurringDonations.organization"],
+    });
+    const nowRecurringAmountByActivation = recurringDonations
+      .map((recurringDonation) => ({ key: recurringDonation.active ? 'active' : 'inactive', amount: recurringDonation.amount }))
+      .sort(sortAmountZA)
+      .reduce(arrayToMap, {});
+
+    const tipOrganizationId = (await strapi.db.query("api::global.global").findOne()).tipOrganizationId;
+
+    const recurringDonationsCount = recurringDonations.filter(({ active }) => !!active).length;
+    const recurringDonationsTotalAmount = nowRecurringAmountByActivation.active;
+    const stripeExpenses = recurringDonationsCount * 25 + recurringDonationsTotalAmount * 0.015
+    const tips = recurringDonations
+      .flatMap(({ organizationRecurringDonations }) => organizationRecurringDonations.map(({ organization, amount }) => ({ key: organization.id, amount })))
+      .filter(({ key }) => key === tipOrganizationId)
+      .reduce((sum, { amount }) => sum + amount, 0);
+    const pnl = tips - stripeExpenses
+    const pnlMargin = Math.round(pnl / periodTotal * 100 * 100) / 100 + "%"
+
+    return {
+      periodFrom: from.toISOString(),
+      periodTo: from.toISOString(),
+      periodTotal,
+      periodTotalAmountByOrganization,
+      periodTotalAmountByDonor,
+      periodTotalAmountByType,
+      nowRecurringAmountByActivation,
+      nowEstimatedMontlyPnl: {
+        recurringDonationsCount,
+        recurringDonationsTotalAmount,
+        stripeExpenses,
+        tips,
+        pnl,
+        pnlMargin,
+      }
+    }
   },
 
   async deleteAll() {
