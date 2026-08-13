@@ -33,6 +33,7 @@
         "sections.header-section",
         "sections.causes-section",
         "sections.donation-section",
+        "sections.donation-with-text-section",
         "sections.thank-you-section",
         "sections.power-section",
         "sections.team-section",

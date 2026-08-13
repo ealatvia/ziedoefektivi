@@ -1,0 +1,164 @@
+{
+  "collectionName": "components_sections_donation_with_text_sections",
+  "info": {
+    "displayName": "DonationWithTextSection",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "text": {
+      "type": "richtext"
+    },
+    "title": {
+      "type": "string"
+    },
+    "firstNameText": {
+      "type": "string"
+    },
+    "lastNameText": {
+      "type": "string"
+    },
+    "emailText": {
+      "type": "string"
+    },
+    "idCodeText": {
+      "type": "string"
+    },
+    "idCodeDescription": {
+      "type": "string"
+    },
+    "otherAmountText": {
+      "type": "string"
+    },
+    "amount1": {
+      "type": "integer"
+    },
+    "amount2": {
+      "type": "integer"
+    },
+    "amount3": {
+      "type": "integer"
+    },
+    "singleDonationText": {
+      "type": "string"
+    },
+    "recurringDonationText": {
+      "type": "string"
+    },
+    "amountText": {
+      "type": "string"
+    },
+    "nextButtonText": {
+      "type": "string"
+    },
+    "donateButtonText": {
+      "type": "string"
+    },
+    "termsText": {
+      "type": "richtext"
+    },
+    "chooseAmountText": {
+      "type": "string"
+    },
+    "otherAmountOptionText": {
+      "type": "string"
+    },
+    "perMonthText": {
+      "type": "string"
+    },
+    "donationTypeText": {
+      "type": "string"
+    },
+    "stepText": {
+      "type": "string"
+    },
+    "backButtonText": {
+      "type": "string"
+    },
+    "detailsText": {
+      "type": "string"
+    },
+    "confirmText": {
+      "type": "string"
+    },
+    "banks": {
+      "type": "component",
+      "repeatable": true,
+      "component": "elements.bank-icon"
+    },
+    "bankText": {
+      "type": "string"
+    },
+    "otherBankText": {
+      "type": "string"
+    },
+    "oneTimeDonationSummary": {
+      "type": "richtext"
+    },
+    "recurringDonationSummary": {
+      "type": "richtext"
+    },
+    "recurringDonationGuide": {
+      "type": "richtext"
+    },
+    "causes": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::cause.cause"
+    },
+    "chooseOrganizationsText": {
+      "type": "string"
+    },
+    "informationText": {
+      "type": "string"
+    },
+    "lockText": {
+      "type": "string"
+    },
+    "letExpertsChooseText": {
+      "type": "string"
+    },
+    "tipTitle": {
+      "type": "string"
+    },
+    "tipText": {
+      "type": "richtext"
+    },
+    "tipCheckboxText": {
+      "type": "string"
+    },
+    "donateAsCompanyText": {
+      "type": "string"
+    },
+    "companyNameText": {
+      "type": "string"
+    },
+    "companyCodeText": {
+      "type": "string"
+    },
+    "dedicateDonationText": {
+      "type": "string"
+    },
+    "dedicationNameText": {
+      "type": "string"
+    },
+    "dedicationEmailText": {
+      "type": "string"
+    },
+    "dedicationMessageText": {
+      "type": "string"
+    },
+    "paymentMethodText": {
+      "type": "string",
+      "default": "Makseviis"
+    },
+    "paymentInitiationText": {
+      "type": "string",
+      "default": "Pangalink"
+    },
+    "cardPaymentsText": {
+      "type": "string",
+      "default": "Kaardimakse"
+    }
+  }
+}
